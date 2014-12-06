@@ -1,13 +1,12 @@
 {
     "name": "popphp/pop-acl",
-    "description": "Pop ACL Component for Pop PHP Framework 2",
+    "description": "Pop ACL Component for Pop PHP Framework",
     "keywords": [
         "acl",
         "access control list",
         "php",
         "pop",
-        "pop php",
-        "pop php 2"
+        "pop php"
     ],
     "homepage": "http://www.popphp.org/",
     "license": "New BSD",
