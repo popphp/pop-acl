@@ -397,18 +397,26 @@ class Acl
     /**
      * Determine if the user is allowed
      *
-     * @param  Role   $role
+     * @param  mixed  $role
      * @param  string $resource
      * @param  string $permission
      * @throws Exception
      * @return boolean
      */
-    public function isAllowed(Role $role, $resource = null, $permission = null)
+    public function isAllowed($role, $resource = null, $permission = null)
     {
         $result = false;
 
-        if (!isset($this->roles[$role->getName()])) {
-            throw new Exception('Error: That role has not been added.');
+        if (is_string($role)) {
+            if (!isset($this->roles[$role])) {
+                throw new Exception('Error: That role has not been added.');
+            }
+        } else if ($role instanceof Role) {
+            if (!isset($this->roles[$role->getName()])) {
+                throw new Exception('Error: That role has not been added.');
+            }
+        } else {
+            throw new \InvalidArgumentException('Error: The role passed must either be a name of a role or a Role object.');
         }
 
         if ((null !== $resource) && !isset($this->resources[$resource])) {
@@ -450,18 +458,26 @@ class Acl
     /**
      * Determine if the user is denied
      *
-     * @param  Role   $role
+     * @param  mixed  $role
      * @param  string $resource
      * @param  string $permission
      * @throws Exception
      * @return boolean
      */
-    public function isDenied(Role $role, $resource = null, $permission = null)
+    public function isDenied($role, $resource = null, $permission = null)
     {
         $result = false;
 
-        if (!isset($this->roles[$role->getName()])) {
-            throw new Exception('Error: That role has not been added.');
+        if (is_string($role)) {
+            if (!isset($this->roles[$role])) {
+                throw new Exception('Error: That role has not been added.');
+            }
+        } else if ($role instanceof Role) {
+            if (!isset($this->roles[$role->getName()])) {
+                throw new Exception('Error: That role has not been added.');
+            }
+        } else {
+            throw new \InvalidArgumentException('Error: The role passed must either be a name of a role or a Role object.');
         }
 
         if ((null !== $resource) && !isset($this->resources[$resource])) {
