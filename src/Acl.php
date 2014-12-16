@@ -84,6 +84,16 @@ class Acl
     }
 
     /**
+     * Get roles
+     *
+     * @return array
+     */
+    public function getRoles()
+    {
+        return $this->roles;
+    }
+
+    /**
      * See if a role has been added
      *
      * @param  string $role
@@ -147,13 +157,23 @@ class Acl
     /**
      * Add a resource
      *
-     * @param  Resource $resource
+     * @param Resource $resource
      * @return Acl
      */
     public function addResource(Resource $resource)
     {
         $this->resources[$resource->getName()] = $resource;
         return $this;
+    }
+
+    /**
+     * Get resources
+     *
+     * @return array
+     */
+    public function getResources()
+    {
+        return $this->resources;
     }
 
     /**
