@@ -410,6 +410,8 @@ class Acl
         if (is_string($role)) {
             if (!isset($this->roles[$role])) {
                 throw new Exception('Error: That role has not been added.');
+            } else {
+                $role = $this->roles[$role];
             }
         } else if ($role instanceof Role) {
             if (!isset($this->roles[$role->getName()])) {
@@ -471,6 +473,8 @@ class Acl
         if (is_string($role)) {
             if (!isset($this->roles[$role])) {
                 throw new Exception('Error: That role has not been added.');
+            } else {
+                $role = $this->roles[$role];
             }
         } else if ($role instanceof Role) {
             if (!isset($this->roles[$role->getName()])) {
