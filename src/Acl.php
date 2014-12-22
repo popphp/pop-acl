@@ -57,8 +57,8 @@ class Acl
      *
      * Instantiate the ACL object
      *
-     * @param  Role     $role
-     * @param  Resource $resource
+     * @param  Role              $role
+     * @param  \Pop\Acl\Resource $resource
      * @return Acl
      */
     public function __construct(Role $role = null, Resource $resource = null)
@@ -157,7 +157,7 @@ class Acl
     /**
      * Add a resource
      *
-     * @param Resource $resource
+     * @param \Pop\Acl\Resource $resource
      * @return Acl
      */
     public function addResource(Resource $resource)
@@ -195,9 +195,9 @@ class Acl
     /**
      * Allow a user role permission to a resource or resources
      *
-     * @param  string|array  $roles
-     * @param  string|array  $resources
-     * @param  string|array  $permissions
+     * @param  string|array $roles
+     * @param  string|array $resources
+     * @param  string|array $permissions
      * @throws Exception
      * @return Acl
      */
@@ -343,9 +343,6 @@ class Acl
                             $permissions = [$permissions];
                         }
                         foreach ($permissions as $permission) {
-                            //if (!$this->roles[$role]->hasPermission($permission)) {
-                            //    throw new Exception("Error: The role '" . $role . "' does not have the permission '" . $permission . "'.");
-                            //}
                             $this->denied[$role][$resource][] = $permission;
                         }
                     }
@@ -446,31 +443,37 @@ class Acl
         }
 
         if (!$this->isDenied($role, $resource, $permission)) {
-            if ((null !== $resource) && (null !== $permission)) {
-                // Full access, no resource or permission defined OR
-                // Full access to the resource if no permission defined OR
-                // determine access based on resource and permission passed
-                if ((isset($this->allowed[$role->getName()]) && (count($this->allowed[$role->getName()]) == 0)) ||
-                    (isset($this->allowed[$role->getName()]) && isset($this->allowed[$role->getName()][$resource]) &&
-                        (count($this->allowed[$role->getName()][$resource]) == 0)) ||
-                    ($role->hasPermission($permission) &&
-                     isset($this->allowed[$role->getName()]) &&
-                     isset($this->allowed[$role->getName()][$resource]) &&
-                     in_array($permission, $this->allowed[$role->getName()][$resource]))) {
-                    $result = true;
+            $roleToCheck = $role;
+            while (null !== $roleToCheck) {
+                if ((null !== $resource) && (null !== $permission)) {
+                    // Full access, no resource or permission defined OR
+                    // Full access to the resource if no permission defined OR
+                    // determine access based on resource and permission passed
+                    if ((isset($this->allowed[$roleToCheck->getName()]) && (count($this->allowed[$roleToCheck->getName()]) == 0)) ||
+                        (isset($this->allowed[$roleToCheck->getName()]) && isset($this->allowed[$roleToCheck->getName()][$resource]) &&
+                            (count($this->allowed[$roleToCheck->getName()][$resource]) == 0)) ||
+                        ($roleToCheck->hasPermission($permission) &&
+                            isset($this->allowed[$roleToCheck->getName()]) &&
+                            isset($this->allowed[$roleToCheck->getName()][$resource]) &&
+                            in_array($permission, $this->allowed[$roleToCheck->getName()][$resource]))
+                    ) {
+                        $result = true;
+                    }
+                } else if (null !== $resource) {
+                    // Full access, no resource defined OR
+                    // determine access based on resource passed
+                    if ((isset($this->allowed[$roleToCheck->getName()]) && (count($this->allowed[$roleToCheck->getName()]) == 0)) ||
+                        (isset($this->allowed[$roleToCheck->getName()]) &&
+                            isset($this->allowed[$roleToCheck->getName()][$resource]))
+                    ) {
+                        $result = true;
+                    }
+                } else {
+                    if (isset($this->allowed[$roleToCheck->getName()])) {
+                        $result = true;
+                    }
                 }
-            } else if (null !== $resource) {
-                // Full access, no resource defined OR
-                // determine access based on resource passed
-                if ((isset($this->allowed[$role->getName()]) && (count($this->allowed[$role->getName()]) == 0)) ||
-                    (isset($this->allowed[$role->getName()]) &&
-                    isset($this->allowed[$role->getName()][$resource]))) {
-                    $result = true;
-                }
-            } else {
-                if (isset($this->allowed[$role->getName()])) {
-                    $result = true;
-                }
+                $roleToCheck = $roleToCheck->getParent();
             }
         }
 
@@ -509,20 +512,24 @@ class Acl
         }
 
         // Check if the user, resource and/or permission is denied
-        if (isset($this->denied[$role->getName()])) {
-            if (count($this->denied[$role->getName()]) > 0) {
-                if ((null !== $resource) && array_key_exists($resource, $this->denied[$role->getName()])) {
-                    if (count($this->denied[$role->getName()][$resource]) > 0) {
-                        if ((null !== $permission) && in_array($permission, $this->denied[$role->getName()][$resource])) {
+        $roleToCheck = $role;
+        while (null !== $roleToCheck) {
+            if (isset($this->denied[$roleToCheck->getName()])) {
+                if (count($this->denied[$roleToCheck->getName()]) > 0) {
+                    if ((null !== $resource) && array_key_exists($resource, $this->denied[$roleToCheck->getName()])) {
+                        if (count($this->denied[$roleToCheck->getName()][$resource]) > 0) {
+                            if ((null !== $permission) && in_array($permission, $this->denied[$roleToCheck->getName()][$resource])) {
+                                $result = true;
+                            }
+                        } else {
                             $result = true;
                         }
-                    } else {
-                        $result = true;
                     }
+                } else {
+                    $result = true;
                 }
-            } else {
-                $result = true;
             }
+            $roleToCheck = $roleToCheck->getParent();
         }
 
         return $result;
