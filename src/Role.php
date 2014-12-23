@@ -35,12 +35,6 @@ class Role
     protected $name = null;
 
     /**
-     * Role permissions
-     * @var array
-     */
-    protected $permissions = [];
-
-    /**
      * Role children
      * @var array
      */
@@ -58,15 +52,11 @@ class Role
      * Instantiate the role object
      *
      * @param  string $name
-     * @param  array  $permissions
      * @return Role
      */
-    public function __construct($name, array $permissions = null)
+    public function __construct($name)
     {
         $this->setName($name);
-        if (null !== $permissions) {
-            $this->setPermissions($permissions);
-        }
     }
 
     /**
@@ -92,94 +82,42 @@ class Role
     }
 
     /**
-     * Get role permissions
+     * Add a child role
      *
-     * @param  array $permissions
+     * @param  Role $child
      * @return Role
      */
-    public function setPermissions(array $permissions)
+    public function addChild(Role $child)
     {
-        foreach ($permissions as $permission) {
-            $this->addPermission($permission);
+        if ($child->getName() !== $this->getName()) {
+            if (!in_array($child, $this->children, true)) {
+                $this->children[] = $child;
+            }
+            if (null === $child->getParent()) {
+                $child->setParent($this);
+            }
         }
         return $this;
     }
 
     /**
-     * Add a permission to the role
+     * Has child roles
      *
-     * @param  string $permission
-     * @return Role
+     * @return boolean
      */
-    public function addPermission($permission)
+    public function hasChildren()
     {
-        if (!$this->hasPermission($permission)) {
-            $this->permissions[] = $permission;
-        }
-        return $this;
+        return (count($this->children) > 0);
     }
 
     /**
-     * Get role permissions
+     * Get child roles
      *
      * @return array
      */
-    public function getPermissions()
+    public function getChildren()
     {
-        return $this->permissions;
-    }
-
-    /**
-     * Remove a permission from the role
-     *
-     * @param  string $permission
-     * @return Role
-     */
-    public function removePermission($permission)
-    {
-        if (isset($this->permissions[$permission])) {
-            unset($this->permissions[$permission]);
-        }
-        return $this;
-    }
-
-    /**
-     * Check if a role has a permission
-     *
-     * @param  string $permission
-     * @return boolean
-     */
-    public function hasPermission($permission)
-    {
-        return in_array($permission, $this->permissions);
-    }
-
-    /**
-     * Add a child role
-     *
-     * @param  Role $role
-     * @return Role
-     */
-    public function addChild(Role $role)
-    {
-        $this->children[] = $role;
-        if ($role->getName() !== $this) {
-            $role->setParent($this);
-        }
-        return $this;
-    }
-
-    /**
-     * Set the inherited role
-     *
-     * @param  Role $parent
-     * @return Role
-     */
-    public function inheritsFrom(Role $parent)
-    {
-        $this->setParent($parent);
-        $this->parent->addChild($this);
-        return $this;
+        return $this->children;
     }
 
     /**
@@ -190,12 +128,10 @@ class Role
      */
     public function setParent(Role $parent)
     {
-        $this->parent      = $parent;
-        $permissions = $parent->getPermissions();
-        foreach ($permissions as $permission) {
-            $this->addPermission($permission);
+        if ($parent->getName() !== $this->getName()) {
+            $this->parent = $parent;
+            $this->parent->addChild($this);
         }
-
         return $this;
     }
 

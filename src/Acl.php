@@ -57,7 +57,7 @@ class Acl
      *
      * Instantiate the ACL object
      *
-     * @param  Role              $role
+     * @param  \Pop\Acl\Role     $role
      * @param  \Pop\Acl\Resource $resource
      * @return Acl
      */
@@ -112,7 +112,20 @@ class Acl
      */
     public function addRole(Role $role)
     {
-        $this->roles[$role->getName()] = $role;
+        if (!isset($this->roles[$role->getName()])) {
+            $this->roles[$role->getName()] = $role;
+
+            // Traverse up if role has parents
+            while ($role->hasParent()) {
+                $role = $role->getParent();
+                $this->roles[$role->getName()] = $role;
+            }
+
+            // Traverse down if the role has children
+            if ($role->hasChildren()) {
+                $this->traverseChildren($role->getChildren());
+            }
+        }
         return $this;
     }
 
@@ -195,50 +208,33 @@ class Acl
     /**
      * Allow a user role permission to a resource or resources
      *
-     * @param  string|array $roles
-     * @param  string|array $resources
-     * @param  string|array $permissions
+     * @param  mixed $role
+     * @param  mixed $resource
+     * @param  mixed $permission
      * @throws Exception
      * @return Acl
      */
-    public function allow($roles, $resources = null, $permissions = null)
+    public function allow($role, $resource = null, $permission = null)
     {
-        if (!is_array($roles)) {
-            $roles = [$roles];
+        // Check if the role has been added
+        if (!isset($this->roles[(string)$role])) {
+            throw new Exception('Error: That role has not been added.');
         }
 
-        // Check if the roles has been added
-        foreach ($roles as $role) {
-            if (!isset($this->roles[$role])) {
-                throw new Exception('Error: That role has not been added.');
-            }
+        if (!isset($this->allowed[(string)$role])) {
+            $this->allowed[(string)$role] = [];
+        }
 
-            if (!isset($this->allowed[$role])) {
-                $this->allowed[$role] = [];
+        // Check if the resource(s) have been added
+        if (null !== $resource) {
+            if (!isset($this->resources[(string)$resource])) {
+                $this->addResource(new Resource((string)$resource));
             }
-
-            // Check if the resource(s) have been added
-            if (null !== $resources) {
-                if (!is_array($resources)) {
-                    $resources = [$resources];
-                }
-                foreach ($resources as $resource) {
-                    if (!isset($this->resources[$resource])) {
-                        $this->addResource(new Resource($resource));
-                    }
-                    $this->allowed[$role][$resource] = [];
-                    if (null != $permissions) {
-                        if (!is_array($permissions)) {
-                            $permissions = [$permissions];
-                        }
-                        foreach ($permissions as $permission) {
-                            if (!$this->roles[$role]->hasPermission($permission)) {
-                                throw new Exception("Error: The role '" . $role . "' does not have the permission '" . $permission . "'.");
-                            }
-                            $this->allowed[$role][$resource][] = $permission;
-                        }
-                    }
-                }
+            if (!isset($this->allowed[(string)$role][(string)$resource])) {
+                $this->allowed[(string)$role][(string)$resource] = [];
+            }
+            if (null != $permission) {
+                $this->allowed[(string)$role][(string)$resource][] = $permission;
             }
         }
 
@@ -248,56 +244,40 @@ class Acl
     /**
      * Remove an allow rule
      *
-     * @param  mixed  $roles
-     * @param  mixed  $resources
-     * @param  mixed  $permissions
+     * @param  mixed $role
+     * @param  mixed $resource
+     * @param  mixed $permission
      * @throws Exception
      * @return Acl
      */
-    public function removeAllow($roles, $resources = null, $permissions = null)
+    public function removeAllow($role, $resource = null, $permission = null)
     {
-        if (!is_array($roles)) {
-            $roles = [$roles];
+        // Check if the role has been added
+        if (!isset($this->roles[(string)$role])) {
+            throw new Exception('Error: That role has not been added.');
         }
 
-        // Check if the roles has been added
-        foreach ($roles as $role) {
-            if (!isset($this->roles[$role])) {
-                throw new Exception('Error: That role has not been added.');
-            }
+        if (!isset($this->allowed[(string)$role])) {
+            throw new Exception('Error: That role has no allow rules associated with it.');
+        }
 
-            if (!isset($this->allowed[$role])) {
-                throw new Exception('Error: That role has no allow rules associated with it.');
+        // Check if the resource(s) have been added
+        if (null !== $resource) {
+            if (!isset($this->resources[(string)$resource])) {
+                $this->addResource(new Resource((string)$resource));
             }
-
-            // Check if the resource(s) have been added
-            if (null !== $resources) {
-                if (!is_array($resources)) {
-                    $resources = [$resources];
-                }
-                foreach ($resources as $resource) {
-                    if (!isset($this->resources[$resource])) {
-                        $this->addResource(new Resource($resource));
+            if (isset($this->allowed[(string)$role][(string)$resource])) {
+                if (null != $permission) {
+                    if (in_array($permission, $this->allowed[(string)$role][(string)$resource])) {
+                        $key = array_search($permission, $this->allowed[(string)$role][(string)$resource]);
+                        unset($this->allowed[(string)$role][(string)$resource][$key]);
                     }
-                    if (isset($this->allowed[$role][$resource])) {
-                        if (null != $permissions) {
-                            if (!is_array($permissions)) {
-                                $permissions = [$permissions];
-                            }
-                            foreach ($permissions as $permission) {
-                                if (in_array($permission, $this->allowed[$role][$resource])) {
-                                    $key = array_search($permission, $this->allowed[$role][$resource]);
-                                    unset($this->allowed[$role][$resource][$key]);
-                                }
-                            }
-                        } else {
-                            unset($this->allowed[$role][$resource]);
-                        }
-                    }
+                } else {
+                    unset($this->allowed[(string)$role][(string)$resource]);
                 }
-            } else {
-                unset($this->allowed[$role]);
             }
+        } else {
+            unset($this->allowed[(string)$role]);
         }
 
         return $this;
@@ -306,47 +286,33 @@ class Acl
     /**
      * Deny a user role permission to a resource or resources
      *
-     * @param  mixed $roles
-     * @param  mixed $resources
-     * @param  mixed $permissions
+     * @param  mixed $role
+     * @param  mixed $resource
+     * @param  mixed $permission
      * @throws Exception
      * @return Acl
      */
-    public function deny($roles, $resources = null, $permissions = null)
+    public function deny($role, $resource = null, $permission = null)
     {
-        if (!is_array($roles)) {
-            $roles = [$roles];
+        // Check if the roles has been added
+        if (!isset($this->roles[(string)$role])) {
+            throw new Exception('Error: That role has not been added.');
         }
 
-        // Check if the roles has been added
-        foreach ($roles as $role) {
-            if (!isset($this->roles[$role])) {
-                throw new Exception('Error: That role has not been added.');
-            }
+        if (!isset($this->denied[(string)$role])) {
+            $this->denied[(string)$role] = [];
+        }
 
-            if (!isset($this->denied[$role])) {
-                $this->denied[$role] = [];
+        // Check if the resource(s) have been added
+        if (null !== $resource) {
+            if (!isset($this->resources[(string)$resource])) {
+                $this->addResource(new Resource((string)$resource));
             }
-
-            // Check if the resource(s) have been added
-            if (null !== $resources) {
-                if (!is_array($resources)) {
-                    $resources = [$resources];
-                }
-                foreach ($resources as $resource) {
-                    if (!isset($this->resources[$resource])) {
-                        $this->addResource(new Resource($resource));
-                    }
-                    $this->denied[$role][$resource] = [];
-                    if (null != $permissions) {
-                        if (!is_array($permissions)) {
-                            $permissions = [$permissions];
-                        }
-                        foreach ($permissions as $permission) {
-                            $this->denied[$role][$resource][] = $permission;
-                        }
-                    }
-                }
+            if (!isset($this->denied[(string)$role][(string)$resource])) {
+                $this->denied[(string)$role][(string)$resource] = [];
+            }
+            if (null != $permission) {
+                $this->denied[(string)$role][(string)$resource][] = $permission;
             }
         }
 
@@ -356,56 +322,40 @@ class Acl
     /**
      * Remove a deny rule
      *
-     * @param  mixed $roles
-     * @param  mixed $resources
-     * @param  mixed $permissions
+     * @param  mixed $role
+     * @param  mixed $resource
+     * @param  mixed $permission
      * @throws Exception
      * @return Acl
      */
-    public function removeDeny($roles, $resources = null, $permissions = null)
+    public function removeDeny($role, $resource = null, $permission = null)
     {
-        if (!is_array($roles)) {
-            $roles = [$roles];
+        // Check if the roles has been added
+        if (!isset($this->roles[(string)$role])) {
+            throw new Exception('Error: That role has not been added.');
         }
 
-        // Check if the roles has been added
-        foreach ($roles as $role) {
-            if (!isset($this->roles[$role])) {
-                throw new Exception('Error: That role has not been added.');
-            }
+        if (!isset($this->denied[(string)$role])) {
+            throw new Exception('Error: That role has no allow rules associated with it.');
+        }
 
-            if (!isset($this->denied[$role])) {
-                throw new Exception('Error: That role has no allow rules associated with it.');
+        // Check if the resource(s) have been added
+        if (null !== $resource) {
+            if (!isset($this->resources[(string)$resource])) {
+                $this->addResource(new Resource((string)$resource));
             }
-
-            // Check if the resource(s) have been added
-            if (null !== $resources) {
-                if (!is_array($resources)) {
-                    $resources = [$resources];
-                }
-                foreach ($resources as $resource) {
-                    if (!isset($this->resources[$resource])) {
-                        $this->addResource($resource);
+            if (isset($this->denied[(string)$role][(string)$resource])) {
+                if (null != $permission) {
+                    if (in_array($permission, $this->denied[(string)$role][(string)$resource])) {
+                        $key = array_search($permission, $this->denied[(string)$role][(string)$resource]);
+                        unset($this->denied[(string)$role][(string)$resource][$key]);
                     }
-                    if (isset($this->denied[$role][$resource])) {
-                        if (null != $permissions) {
-                            if (!is_array($permissions)) {
-                                $permissions = [$permissions];
-                            }
-                            foreach ($permissions as $permission) {
-                                if (in_array($permission, $this->denied[$role][$resource])) {
-                                    $key = array_search($permission, $this->denied[$role][$resource]);
-                                    unset($this->denied[$role][$resource][$key]);
-                                }
-                            }
-                        } else {
-                            unset($this->denied[$role][$resource]);
-                        }
-                    }
+                } else {
+                    unset($this->denied[(string)$role][(string)$resource]);
                 }
-            } else {
-                unset($this->denied[$role]);
             }
+        } else {
+            unset($this->denied[(string)$role]);
         }
 
         return $this;
@@ -414,9 +364,9 @@ class Acl
     /**
      * Determine if the user is allowed
      *
-     * @param  mixed  $role
-     * @param  string $resource
-     * @param  string $permission
+     * @param  mixed $role
+     * @param  mixed $resource
+     * @param  mixed $permission
      * @throws Exception
      * @return boolean
      */
@@ -424,52 +374,31 @@ class Acl
     {
         $result = false;
 
-        if (is_string($role)) {
-            if (!isset($this->roles[$role])) {
-                throw new Exception('Error: That role has not been added.');
-            } else {
-                $role = $this->roles[$role];
-            }
-        } else if ($role instanceof Role) {
-            if (!isset($this->roles[$role->getName()])) {
-                throw new Exception('Error: That role has not been added.');
-            }
-        } else {
-            throw new \InvalidArgumentException('Error: The role passed must either be a name of a role or a Role object.');
+        // Check if the roles has been added
+        if (!isset($this->roles[(string)$role])) {
+            throw new Exception('Error: That role has not been added.');
         }
 
-        if ((null !== $resource) && !isset($this->resources[$resource])) {
-            $this->addResource(new Resource($resource));
+        $role = $this->roles[(string)$role];
+
+        if ((null !== $resource) && !isset($this->resources[(string)$resource])) {
+            $this->addResource(new Resource((string)$resource));
         }
 
         if (!$this->isDenied($role, $resource, $permission)) {
             $roleToCheck = $role;
             while (null !== $roleToCheck) {
-                if ((null !== $resource) && (null !== $permission)) {
-                    // Full access, no resource or permission defined OR
-                    // Full access to the resource if no permission defined OR
-                    // determine access based on resource and permission passed
-                    if ((isset($this->allowed[$roleToCheck->getName()]) && (count($this->allowed[$roleToCheck->getName()]) == 0)) ||
-                        (isset($this->allowed[$roleToCheck->getName()]) && isset($this->allowed[$roleToCheck->getName()][$resource]) &&
-                            (count($this->allowed[$roleToCheck->getName()][$resource]) == 0)) ||
-                        ($roleToCheck->hasPermission($permission) &&
-                            isset($this->allowed[$roleToCheck->getName()]) &&
-                            isset($this->allowed[$roleToCheck->getName()][$resource]) &&
-                            in_array($permission, $this->allowed[$roleToCheck->getName()][$resource]))
-                    ) {
+                if (isset($this->allowed[(string)$roleToCheck])) {
+                    // No explicit resources or permissions
+                    if (count($this->allowed[(string)$roleToCheck]) == 0) {
                         $result = true;
-                    }
-                } else if (null !== $resource) {
-                    // Full access, no resource defined OR
-                    // determine access based on resource passed
-                    if ((isset($this->allowed[$roleToCheck->getName()]) && (count($this->allowed[$roleToCheck->getName()]) == 0)) ||
-                        (isset($this->allowed[$roleToCheck->getName()]) &&
-                            isset($this->allowed[$roleToCheck->getName()][$resource]))
-                    ) {
+                    // Resource set, but no explicit permissions
+                    } else if (isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
+                        (count($this->allowed[(string)$roleToCheck][(string)$resource]) == 0)) {
                         $result = true;
-                    }
-                } else {
-                    if (isset($this->allowed[$roleToCheck->getName()])) {
+                    // Else, has resource and permissions set
+                    } else if (isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
+                        in_array($permission, $this->allowed[(string)$roleToCheck][(string)$resource])) {
                         $result = true;
                     }
                 }
@@ -483,9 +412,9 @@ class Acl
     /**
      * Determine if the user is denied
      *
-     * @param  mixed  $role
-     * @param  string $resource
-     * @param  string $permission
+     * @param  mixed $role
+     * @param  mixed $resource
+     * @param  mixed $permission
      * @throws Exception
      * @return boolean
      */
@@ -493,32 +422,25 @@ class Acl
     {
         $result = false;
 
-        if (is_string($role)) {
-            if (!isset($this->roles[$role])) {
-                throw new Exception('Error: That role has not been added.');
-            } else {
-                $role = $this->roles[$role];
-            }
-        } else if ($role instanceof Role) {
-            if (!isset($this->roles[$role->getName()])) {
-                throw new Exception('Error: That role has not been added.');
-            }
-        } else {
-            throw new \InvalidArgumentException('Error: The role passed must either be a name of a role or a Role object.');
+        // Check if the roles has been added
+        if (!isset($this->roles[(string)$role])) {
+            throw new Exception('Error: That role has not been added.');
         }
 
-        if ((null !== $resource) && !isset($this->resources[$resource])) {
-            $this->addResource(new Resource($resource));
+        $role = $this->roles[(string)$role];
+
+        if ((null !== $resource) && !isset($this->resources[(string)$resource])) {
+            $this->addResource(new Resource((string)$resource));
         }
 
         // Check if the user, resource and/or permission is denied
         $roleToCheck = $role;
         while (null !== $roleToCheck) {
-            if (isset($this->denied[$roleToCheck->getName()])) {
-                if (count($this->denied[$roleToCheck->getName()]) > 0) {
-                    if ((null !== $resource) && array_key_exists($resource, $this->denied[$roleToCheck->getName()])) {
-                        if (count($this->denied[$roleToCheck->getName()][$resource]) > 0) {
-                            if ((null !== $permission) && in_array($permission, $this->denied[$roleToCheck->getName()][$resource])) {
+            if (isset($this->denied[(string)$roleToCheck])) {
+                if (count($this->denied[(string)$roleToCheck]) > 0) {
+                    if ((null !== $resource) && array_key_exists((string)$resource, $this->denied[(string)$roleToCheck])) {
+                        if (count($this->denied[(string)$roleToCheck][(string)$resource]) > 0) {
+                            if ((null !== $permission) && in_array($permission, $this->denied[(string)$roleToCheck][(string)$resource])) {
                                 $result = true;
                             }
                         } else {
@@ -533,6 +455,22 @@ class Acl
         }
 
         return $result;
+    }
+
+    /**
+     * Traverse child roles to add them to the ACL object
+     *
+     * @param  array $roles
+     * @return void
+     */
+    protected function traverseChildren(array $roles)
+    {
+        foreach ($roles as $role) {
+            $this->addRole($role);
+            if ($role->hasChildren()) {
+                $this->traverseChildren($role->getChildren());
+            }
+        }
     }
 
 }
