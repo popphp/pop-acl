@@ -393,13 +393,17 @@ class Acl
                     if (count($this->allowed[(string)$roleToCheck]) == 0) {
                         $result = true;
                     // Resource set, but no explicit permissions
-                    } else if (isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
+                    } else if ((null !== $resource) && isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
                         (count($this->allowed[(string)$roleToCheck][(string)$resource]) == 0)) {
                         $result = true;
                     // Else, has resource and permissions set
-                    } else if (isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
-                        in_array($permission, $this->allowed[(string)$roleToCheck][(string)$resource])) {
-                        $result = true;
+                    } else if ((null !== $resource) && (null !== $permission) &&
+                        isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
+                        (count($this->allowed[(string)$roleToCheck][(string)$resource]) > 0)) {
+                        if (!is_array($permission)) {
+                            $permission = [$permission];
+                        }
+                        $result = (count(array_intersect($permission, $this->allowed[(string)$roleToCheck][(string)$resource])) == count($permission));
                     }
                 }
                 $roleToCheck = $roleToCheck->getParent();
@@ -440,8 +444,15 @@ class Acl
                 if (count($this->denied[(string)$roleToCheck]) > 0) {
                     if ((null !== $resource) && array_key_exists((string)$resource, $this->denied[(string)$roleToCheck])) {
                         if (count($this->denied[(string)$roleToCheck][(string)$resource]) > 0) {
-                            if ((null !== $permission) && in_array($permission, $this->denied[(string)$roleToCheck][(string)$resource])) {
-                                $result = true;
+                            if (null !== $permission) {
+                                if (!is_array($permission)) {
+                                    $permission = [$permission];
+                                }
+                                foreach ($permission as $p) {
+                                    if (in_array($p, $this->denied[(string)$roleToCheck][(string)$resource])) {
+                                        $result = true;
+                                    }
+                                }
                             }
                         } else {
                             $result = true;
