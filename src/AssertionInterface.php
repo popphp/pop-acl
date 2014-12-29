@@ -16,7 +16,7 @@
 namespace Pop\Acl;
 
 /**
- * Acl resource class
+ * Assertion interface
  *
  * @category   Pop
  * @package    Pop_Acl
@@ -25,7 +25,17 @@ namespace Pop\Acl;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class Resource extends AbstractAclObject
+interface AssertionInterface
 {
+
+    /**
+     * Evaluate assertion
+     *
+     * @param  Acl               $acl
+     * @param  Role              $role
+     * @param  \Pop\Acl\Resource $resource
+     * @return boolean
+     */
+    public function assert(Acl $acl, Role $role, \Pop\Acl\Resource $resource = null);
 
 }

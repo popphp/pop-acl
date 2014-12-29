@@ -25,14 +25,8 @@ namespace Pop\Acl;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class Role
+class Role extends AbstractAclObject
 {
-
-    /**
-     * Role name
-     * @var string
-     */
-    protected $name = null;
 
     /**
      * Role children
@@ -45,41 +39,6 @@ class Role
      * @var Role
      */
     protected $parent = null;
-
-    /**
-     * Constructor
-     *
-     * Instantiate the role object
-     *
-     * @param  string $name
-     * @return Role
-     */
-    public function __construct($name)
-    {
-        $this->setName($name);
-    }
-
-    /**
-     * Set the role name
-     *
-     * @param  string $name
-     * @return Role
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * Get the role name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
 
     /**
      * Add a child role
@@ -155,14 +114,5 @@ class Role
         return (null !== $this->parent);
     }
 
-    /**
-     * Return the string value of the name of the role
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->name;
-    }
 
 }
