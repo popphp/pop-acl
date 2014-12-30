@@ -13,10 +13,10 @@
 /**
  * @namespace
  */
-namespace Pop\Acl;
+namespace Pop\Acl\Assertion;
 
 /**
- * Acl resource class
+ * Acl assertion exception class
  *
  * @category   Pop
  * @package    Pop_Acl
@@ -25,7 +25,4 @@ namespace Pop\Acl;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class Resource extends AbstractAclObject
-{
-
-}
+class Exception extends \Exception {}

@@ -13,10 +13,10 @@
 /**
  * @namespace
  */
-namespace Pop\Acl;
+namespace Pop\Acl\Resource;
 
 /**
- * Assertion interface
+ * Acl resource exception class
  *
  * @category   Pop
  * @package    Pop_Acl
@@ -25,17 +25,4 @@ namespace Pop\Acl;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-interface AssertionInterface
-{
-
-    /**
-     * Evaluate assertion
-     *
-     * @param  Acl               $acl
-     * @param  Role              $role
-     * @param  \Pop\Acl\Resource $resource
-     * @return boolean
-     */
-    public function assert(Acl $acl, Role $role, \Pop\Acl\Resource $resource = null);
-
-}
+class Exception extends \Exception {}

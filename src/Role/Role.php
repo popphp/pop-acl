@@ -13,7 +13,7 @@
 /**
  * @namespace
  */
-namespace Pop\Acl;
+namespace Pop\Acl\Role;
 
 /**
  * Acl role class
@@ -25,7 +25,7 @@ namespace Pop\Acl;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class Role extends AbstractAclObject
+class Role extends AbstractRole
 {
 
     /**

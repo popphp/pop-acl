@@ -13,7 +13,7 @@
 /**
  * @namespace
  */
-namespace Pop\Acl;
+namespace Pop\Acl\Resource;
 
 /**
  * Abstract ACL object class
@@ -25,7 +25,7 @@ namespace Pop\Acl;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-abstract class AbstractAclObject implements \ArrayAccess
+abstract class AbstractResource implements ResourceInterface, \ArrayAccess
 {
 
     /**
@@ -47,7 +47,7 @@ abstract class AbstractAclObject implements \ArrayAccess
      *
      * @param  string $name
      * @param  array  $data
-     * @return AbstractAclObject
+     * @return AbstractResource
      */
     public function __construct($name, array $data = [])
     {
@@ -59,7 +59,7 @@ abstract class AbstractAclObject implements \ArrayAccess
      * Set the acl object name
      *
      * @param  string $name
-     * @return AbstractAclObject
+     * @return AbstractResource
      */
     public function setName($name)
     {
@@ -71,7 +71,7 @@ abstract class AbstractAclObject implements \ArrayAccess
      * Set the acl object data
      *
      * @param  array $data
-     * @return AbstractAclObject
+     * @return AbstractResource
      */
     public function setData(array $data)
     {

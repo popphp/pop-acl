@@ -15,6 +15,10 @@
  */
 namespace Pop\Acl;
 
+use Pop\Acl\Assertion\AssertionInterface;
+use Pop\Acl\Role;
+use Pop\Acl\Resource;
+
 /**
  * ACL class
  *
@@ -25,7 +29,7 @@ namespace Pop\Acl;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    2.0.0a
  */
-class Acl
+class Acl implements AclInterface
 {
 
     /**
@@ -66,11 +70,11 @@ class Acl
      *
      * Instantiate the ACL object
      *
-     * @param  \Pop\Acl\Role     $role
-     * @param  \Pop\Acl\Resource $resource
+     * @param  Role\Role         $role
+     * @param  Resource\Resource $resource
      * @return Acl
      */
-    public function __construct(Role $role = null, Resource $resource = null)
+    public function __construct(Role\Role $role = null, Resource\Resource $resource = null)
     {
         if (null !== $role) {
             $this->addRole($role);
@@ -85,7 +89,7 @@ class Acl
      * Get a role
      *
      * @param  string $role
-     * @return Role
+     * @return Role\Role
      */
     public function getRole($role)
     {
@@ -116,10 +120,10 @@ class Acl
     /**
      * Add a role
      *
-     * @param  Role $role
+     * @param  Role\Role $role
      * @return Acl
      */
-    public function addRole(Role $role)
+    public function addRole(Role\Role $role)
     {
         if (!isset($this->roles[$role->getName()])) {
             $this->roles[$role->getName()] = $role;
@@ -158,7 +162,7 @@ class Acl
      * Get a resource
      *
      * @param  string $resource
-     * @return Resource
+     * @return Resource\Resource
      */
     public function getResource($resource)
     {
@@ -179,10 +183,10 @@ class Acl
     /**
      * Add a resource
      *
-     * @param \Pop\Acl\Resource $resource
+     * @param Resource\Resource $resource
      * @return Acl
      */
-    public function addResource(Resource $resource)
+    public function addResource(Resource\Resource $resource)
     {
         $this->resources[$resource->getName()] = $resource;
         return $this;
@@ -226,20 +230,31 @@ class Acl
      */
     public function allow($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
-        // Check if the role has been added
+        // Check the role
+        if (!is_string($role) && ($role instanceof Role\AbstractRole)) {
+            throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
+        }
         if (!isset($this->roles[(string)$role])) {
             throw new Exception('Error: That role has not been added.');
         }
+
+        $role = $this->roles[(string)$role];
 
         if (!isset($this->allowed[(string)$role])) {
             $this->allowed[(string)$role] = [];
         }
 
-        // Check if the resource(s) have been added
+        // Check the resource
         if (null !== $resource) {
-            if (!isset($this->resources[(string)$resource])) {
-                $this->addResource(new Resource((string)$resource));
+            if (!is_string($resource) && ($resource instanceof Resource\AbstractResource)) {
+                throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
+            if (!isset($this->resources[(string)$resource])) {
+                throw new Exception('Error: That resource has not been added.');
+            }
+
+            $resource = $this->resources[(string)$resource];
+
             if (!isset($this->allowed[(string)$role][(string)$resource])) {
                 $this->allowed[(string)$role][(string)$resource] = [];
             }
@@ -266,29 +281,39 @@ class Acl
     /**
      * Remove an allow rule
      *
-     * @param  mixed $role
-     * @param  mixed $resource
-     * @param  mixed $permission
+     * @param  mixed              $role
+     * @param  mixed              $resource
+     * @param  mixed              $permission
      * @param  AssertionInterface $assertion
      * @throws Exception
      * @return Acl
      */
     public function removeAllow($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
-        // Check if the role has been added
+        // Check the role
+        if (!is_string($role) && ($role instanceof Role\AbstractRole)) {
+            throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
+        }
         if (!isset($this->roles[(string)$role])) {
             throw new Exception('Error: That role has not been added.');
         }
-
         if (!isset($this->allowed[(string)$role])) {
             throw new Exception('Error: That role has no allow rules associated with it.');
         }
 
-        // Check if the resource(s) have been added
+        $role = $this->roles[(string)$role];
+
+        // Check the resource
         if (null !== $resource) {
-            if (!isset($this->resources[(string)$resource])) {
-                $this->addResource(new Resource((string)$resource));
+            if (!is_string($resource) && ($resource instanceof Resource\AbstractResource)) {
+                throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
+            if (!isset($this->resources[(string)$resource])) {
+                throw new Exception('Error: That resource has not been added.');
+            }
+
+            $resource = $this->resources[(string)$resource];
+
             if (isset($this->allowed[(string)$role][(string)$resource])) {
                 if (null !== $permission) {
                     if (in_array($permission, $this->allowed[(string)$role][(string)$resource])) {
@@ -323,29 +348,40 @@ class Acl
     /**
      * Deny a user role permission to a resource or resources
      *
-     * @param  mixed $role
-     * @param  mixed $resource
-     * @param  mixed $permission
+     * @param  mixed              $role
+     * @param  mixed              $resource
+     * @param  mixed              $permission
      * @param  AssertionInterface $assertion
      * @throws Exception
      * @return Acl
      */
     public function deny($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
-        // Check if the roles has been added
+        // Check the role
+        if (!is_string($role) && ($role instanceof Role\AbstractRole)) {
+            throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
+        }
         if (!isset($this->roles[(string)$role])) {
             throw new Exception('Error: That role has not been added.');
         }
+
+        $role = $this->roles[(string)$role];
 
         if (!isset($this->denied[(string)$role])) {
             $this->denied[(string)$role] = [];
         }
 
-        // Check if the resource(s) have been added
+        // Check the resource
         if (null !== $resource) {
-            if (!isset($this->resources[(string)$resource])) {
-                $this->addResource(new Resource((string)$resource));
+            if (!is_string($resource) && ($resource instanceof Resource\AbstractResource)) {
+                throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
+            if (!isset($this->resources[(string)$resource])) {
+                throw new Exception('Error: That resource has not been added.');
+            }
+
+            $resource = $this->resources[(string)$resource];
+
             if (!isset($this->denied[(string)$role][(string)$resource])) {
                 $this->denied[(string)$role][(string)$resource] = [];
             }
@@ -372,9 +408,9 @@ class Acl
     /**
      * Remove a deny rule
      *
-     * @param  mixed $role
-     * @param  mixed $resource
-     * @param  mixed $permission
+     * @param  mixed              $role
+     * @param  mixed              $resource
+     * @param  mixed              $permission
      * @param  AssertionInterface $assertion
      * @throws Exception
      * @return Acl
@@ -382,19 +418,29 @@ class Acl
     public function removeDeny($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
         // Check if the roles has been added
+        if (!is_string($role) && ($role instanceof Role\AbstractRole)) {
+            throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
+        }
         if (!isset($this->roles[(string)$role])) {
             throw new Exception('Error: That role has not been added.');
         }
-
         if (!isset($this->denied[(string)$role])) {
-            throw new Exception('Error: That role has no allow rules associated with it.');
+            throw new Exception('Error: That role has no deny rules associated with it.');
         }
+
+        $role = $this->roles[(string)$role];
 
         // Check if the resource(s) have been added
         if (null !== $resource) {
-            if (!isset($this->resources[(string)$resource])) {
-                $this->addResource(new Resource((string)$resource));
+            if (!is_string($resource) && ($resource instanceof Resource\AbstractResource)) {
+                throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
+            if (!isset($this->resources[(string)$resource])) {
+                throw new Exception('Error: That resource has not been added.');
+            }
+
+            $resource = $this->resources[(string)$resource];
+
             if (isset($this->denied[(string)$role][(string)$resource])) {
                 if (null !== $permission) {
                     if (in_array($permission, $this->denied[(string)$role][(string)$resource])) {
@@ -447,11 +493,12 @@ class Acl
         $role = $this->roles[(string)$role];
 
         if ((null !== $resource) && !isset($this->resources[(string)$resource])) {
-            $this->addResource(new Resource((string)$resource));
+            throw new Exception('Error: That resource has not been added.');
         }
 
         // Get assertion key
-        $key = (string)$role;
+        $key              = (string)$role;
+        $assertPermission = $permission;
         if (null !== $resource) {
             $key .= '-' . (string)$resource;
         }
@@ -487,7 +534,11 @@ class Acl
 
         // Check for assertion
         if (isset($this->assertions['allowed'][$key])) {
-            if ((null !== $resource) && isset($this->resources[(string)$resource])) {
+            if ((null !== $resource) && isset($this->resources[(string)$resource]) && (null !== $assertPermission)) {
+                $result = $this->assertions['allowed'][$key]->assert(
+                    $this, $role, $this->resources[(string)$resource], $assertPermission
+                );
+            } else if ((null !== $resource) && isset($this->resources[(string)$resource])) {
                 $result = $this->assertions['allowed'][$key]->assert($this, $role, $this->resources[(string)$resource]);
             } else {
                 $result = $this->assertions['allowed'][$key]->assert($this, $role);
@@ -518,11 +569,12 @@ class Acl
         $role = $this->roles[(string)$role];
 
         if ((null !== $resource) && !isset($this->resources[(string)$resource])) {
-            $this->addResource(new Resource((string)$resource));
+            throw new Exception('Error: That resource has not been added.');
         }
 
         // Get assertion key
-        $key = (string)$role;
+        $key              = (string)$role;
+        $assertPermission = $permission;
         if (null !== $resource) {
             $key .= '-' . (string)$resource;
         }
@@ -560,7 +612,11 @@ class Acl
 
         // Check for assertion
         if (isset($this->assertions['denied'][$key])) {
-            if ((null !== $resource) && isset($this->resources[(string)$resource])) {
+            if ((null !== $resource) && isset($this->resources[(string)$resource]) && (null !== $assertPermission)) {
+                $result = $this->assertions['denied'][$key]->assert(
+                    $this, $role, $this->resources[(string)$resource], $assertPermission
+                );
+            } else if ((null !== $resource) && isset($this->resources[(string)$resource])) {
                 $result = $this->assertions['denied'][$key]->assert($this, $role, $this->resources[(string)$resource]);
             } else {
                 $result = $this->assertions['denied'][$key]->assert($this, $role);
