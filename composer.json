@@ -25,6 +25,11 @@
             "Pop\\Acl\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Pop\\Acl\\Test\\": "tests/"
+        }
+    },
     "extra": {
         "branch-alias": {
             "dev-master": "2.0.x-dev"
