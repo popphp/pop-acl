@@ -3,3 +3,5 @@ language: php
 php:
   - 5.4
 
+sudo: required
+
