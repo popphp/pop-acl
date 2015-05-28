@@ -54,7 +54,7 @@ interface AclInterface
      * @throws Exception
      * @return Acl
      */
-    public function removeAllow($role, $resource = null, $permission = null, AssertionInterface $assertion = null);
+    public function removeAllowRule($role, $resource = null, $permission = null, AssertionInterface $assertion = null);
 
     /**
      * Deny a user role permission to a resource or resources
@@ -78,7 +78,7 @@ interface AclInterface
      * @throws Exception
      * @return Acl
      */
-    public function removeDeny($role, $resource = null, $permission = null, AssertionInterface $assertion = null);
+    public function removeDenyRule($role, $resource = null, $permission = null, AssertionInterface $assertion = null);
 
     /**
      * Determine if the user is allowed
