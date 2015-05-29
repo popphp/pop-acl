@@ -4,3 +4,5 @@ before_script:
 language: php
 php:
     - 5.4
+notifications:
+    email: false
