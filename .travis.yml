@@ -4,6 +4,6 @@ php:
 before_install:
     - composer self-update
 install:
-    - composer install
+    - travis_retry composer install --no-interaction --ignore-platform-reqs
 notifications:
     email: false
