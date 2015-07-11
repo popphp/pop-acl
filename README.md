@@ -9,7 +9,7 @@ OVERVIEW
 Beyond granting or denying basic user access, it provides support for roles, resources,
 inherited permissions and also assertions for fine-grain access-control.
 
-`pop-acl` is a component of the [Pop PHP Framework 2](http://www.popphp.org/).
+`pop-acl` is a component of the [Pop PHP Framework](http://www.popphp.org/).
 
 INSTALL
 -------
