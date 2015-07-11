@@ -68,10 +68,17 @@ $page = new Resource('page');
 $acl->addRoles([$editor, $reader]);
 $acl->addResource($page);
 
-$acl->deny('editor', 'page', 'add')   // Neither the editor or reader can add a page
-    ->allow('editor', 'page', 'edit') // The editor can edit a page
-    ->allow('editor', 'page', 'read') // Both the editor or reader can read a page
-    ->deny('reader', 'page', 'edit'); // Over-riding deny rule so that a reader cannot edit a page
+// Neither the editor or reader can add a page
+$acl->deny('editor', 'page', 'add');
+
+// The editor can edit a page
+$acl->allow('editor', 'page', 'edit');
+
+// Both the editor or reader can read a page
+$acl->allow('editor', 'page', 'read');
+
+// Over-riding deny rule so that a reader cannot edit a page
+$acl->deny('reader', 'page', 'edit');
 
 if ($acl->isAllowed('editor', 'page', 'add'))  { } // Returns false
 if ($acl->isAllowed('reader', 'page', 'add'))  { } // Returns false
@@ -97,7 +104,9 @@ class UserCanEditPage implements AssertionInterface
 {
 
     public function assert(
-        Acl $acl, AbstractRole $role, AbstractResource $resource = null, $permission = null
+        Acl $acl, AbstractRole $role,
+        AbstractResource $resource = null,
+        $permission = null
     )
     {
         return ((null !== $resource) && ($role->id == $resource->user_id));
@@ -131,9 +140,11 @@ $acl->allow('admin', 'page', 'add')
     ->allow('admin', 'page', 'edit', new UserCanEditPage())
     ->allow('editor', 'page', 'edit', new UserCanEditPage())
 
-// Returns true because the assertion passes, the admin's ID matches the page's user ID
+// Returns true because the assertion passes,
+// the admin's ID matches the page's user ID
 if ($acl->isAllowed('admin', 'page', 'edit')) { }
 
-// Returns false because the assertion fails, the editor's ID does not match the page's user ID
+// Returns false because the assertion fails,
+// the editor's ID does not match the page's user ID
 if ($acl->isAllowed('editor', 'page', 'edit')) { }
 ```
