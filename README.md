@@ -61,6 +61,9 @@ $acl = new Acl();
 $editor = new Role('editor');
 $reader = new Role('reader');
 
+// Add the $reader role as a child role of $editor.
+// The role $reader will now inherit the access rules
+// of the role $editor, unless explicitly overridden.
 $editor->addChild($reader);
 
 $page = new Resource('page');
@@ -92,7 +95,7 @@ USING ASSERTIONS
 ----------------
 
 If you want more fine-grain control over permissions and who is allowed to do what, you can use assertions.
-First, define the assertion class, which extends the AssertionInterface. In this example, we want to check
+First, define the assertion class, which implements the AssertionInterface. In this example, we want to check
 that the user "owns" the resource via a matching user ID.
 
 ```php
@@ -144,7 +147,8 @@ $acl->allow('admin', 'page', 'add')
 // the admin's ID matches the page's user ID
 if ($acl->isAllowed('admin', 'page', 'edit')) { }
 
-// Returns false because the assertion fails,
-// the editor's ID does not match the page's user ID
+// Although editors can edit pages, this returns false
+// because the assertion fails, as this editor's ID
+// does not match the page's user ID
 if ($acl->isAllowed('editor', 'page', 'edit')) { }
 ```
