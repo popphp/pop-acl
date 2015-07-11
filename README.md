@@ -5,9 +5,9 @@ Pop ACL
 
 OVERVIEW
 --------
-Pop ACL is a component of the Pop PHP Framework 2. It is a full-featured "hybrid" between a standard the
-ACL and RBAC user access concepts. Beyond granting or denying basic user access, it provides support for
-roles, resources, inherited permissions and also assertions for fine-grain access-control.
+Pop ACL is a component of the Pop PHP Framework 2. It is a full-featured "hybrid" between the standard
+ACL and RBAC user access concepts. Beyond granting or denying basic user access, it provides support
+for roles, resources, inherited permissions and also assertions for fine-grain access-control.
 
 INSTALL
 -------
@@ -46,10 +46,47 @@ if ($acl->isAllowed('reader', 'page', 'edit')) { } // Returns false
 if ($acl->isAllowed('reader', 'page', 'read')) { } // Returns true
 ```
 
+ROLE INHERITANCE
+----------------
+
+You can have roles inherit access rules as well.
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\Role\Role;
+use Pop\Acl\Resource\Resource;
+
+$acl = new Acl();
+
+$editor = new Role('editor');
+$reader = new Role('reader');
+
+$editor->addChild($reader);
+
+$page = new Resource('page');
+
+$acl->addRoles([$editor, $reader]);
+$acl->addResource($page);
+
+$acl->deny('editor', 'page', 'add')   // Neither the editor or reader can add a page
+    ->allow('editor', 'page', 'edit') // The editor can edit a page
+    ->allow('editor', 'page', 'read') // Both the editor or reader can read a page
+    ->deny('reader', 'page', 'edit'); // Over-riding deny rule so that a reader cannot edit a page
+
+if ($acl->isAllowed('editor', 'page', 'add'))  { } // Returns false
+if ($acl->isAllowed('reader', 'page', 'add'))  { } // Returns false
+if ($acl->isAllowed('editor', 'page', 'edit')) { } // Returns true
+if ($acl->isAllowed('reader', 'page', 'edit')) { } // Returns false
+if ($acl->isAllowed('editor', 'page', 'read')) { } // Returns true
+if ($acl->isAllowed('reader', 'page', 'read')) { } // Returns true
+```
+
 USING ASSERTIONS
 ----------------
 
 If you want more fine-grain control over permissions and who is allowed to do what, you can use assertions.
+First, define the assertion class, which extends the AssertionInterface. In this example, we want to check
+that the user "owns" the resource via a matching user ID.
 
 ```php
 use Pop\Acl\Acl;
@@ -59,13 +96,17 @@ use Pop\Acl\Resource\AbstractResource;
 class UserCanEditPage implements AssertionInterface
 {
 
-    public function assert(Acl $acl, AbstractRole $role, AbstractResource $resource = null, $permission = null)
+    public function assert(
+        Acl $acl, AbstractRole $role, AbstractResource $resource = null, $permission = null
+    )
     {
         return ((null !== $resource) && ($role->id == $resource->user_id));
     }
 
 }
 ```
+
+Then, within the application, you can use the assertions like this:
 
 ```php
 use Pop\Acl\Acl;
