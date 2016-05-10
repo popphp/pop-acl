@@ -2,7 +2,7 @@ pop-acl
 =======
 
 [![Build Status](https://travis-ci.org/popphp/pop-acl.svg?branch=master)](https://travis-ci.org/popphp/pop-acl)
-[![Coverage Status](http://www.popphp.org/cc/coverage.php?comp=pop-acl)](http://www.popphp.org/cc/pop-acl/)
+[![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-acl)](http://cc.popphp.org/pop-acl/)
 
 OVERVIEW
 --------
