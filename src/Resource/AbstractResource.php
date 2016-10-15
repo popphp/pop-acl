@@ -17,11 +17,11 @@ namespace Pop\Acl\Resource;
  * Abstract ACL object class
  *
  * @category   Pop
- * @package    Pop_Acl
+ * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@nolainteractive.com>
  * @copyright  Copyright (c) 2009-2016 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    2.1.0
+ * @version    3.0.0
  */
 abstract class AbstractResource implements ResourceInterface, \ArrayAccess
 {
