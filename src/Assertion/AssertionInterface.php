@@ -14,8 +14,8 @@
 namespace Pop\Acl\Assertion;
 
 use Pop\Acl\Acl;
-use Pop\Acl\Role\AbstractRole;
-use Pop\Acl\Resource\AbstractResource;
+use Pop\Acl\AclRole;
+use Pop\Acl\AclResource;
 
 /**
  * Assertion interface
@@ -33,12 +33,12 @@ interface AssertionInterface
     /**
      * Evaluate assertion
      *
-     * @param  Acl              $acl
-     * @param  AbstractRole     $role
-     * @param  AbstractResource $resource
-     * @param  mixed            $permission
+     * @param  Acl         $acl
+     * @param  AclRole     $role
+     * @param  AclResource $resource
+     * @param  mixed       $permission
      * @return boolean
      */
-    public function assert(Acl $acl, AbstractRole $role, AbstractResource $resource = null, $permission = null);
+    public function assert(Acl $acl, AclRole $role, AclResource $resource = null, $permission = null);
 
 }

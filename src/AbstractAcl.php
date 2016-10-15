@@ -11,10 +11,10 @@
 /**
  * @namespace
  */
-namespace Pop\Acl\Resource;
+namespace Pop\Acl;
 
 /**
- * Abstract ACL object class
+ * Abstract ACL role class
  *
  * @category   Pop
  * @package    Pop\Acl
@@ -23,7 +23,7 @@ namespace Pop\Acl\Resource;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
-abstract class AbstractResource implements ResourceInterface, \ArrayAccess
+abstract class AbstractAcl implements \ArrayAccess
 {
 
     /**
@@ -41,11 +41,10 @@ abstract class AbstractResource implements ResourceInterface, \ArrayAccess
     /**
      * Constructor
      *
-     * Instantiate the acl object object
+     * Instantiate the acl role object
      *
      * @param  string $name
      * @param  array  $data
-     * @return AbstractResource
      */
     public function __construct($name, array $data = [])
     {
@@ -54,10 +53,10 @@ abstract class AbstractResource implements ResourceInterface, \ArrayAccess
     }
 
     /**
-     * Set the acl object name
+     * Set the acl role name
      *
      * @param  string $name
-     * @return AbstractResource
+     * @return AbstractAcl
      */
     public function setName($name)
     {
@@ -66,10 +65,10 @@ abstract class AbstractResource implements ResourceInterface, \ArrayAccess
     }
 
     /**
-     * Set the acl object data
+     * Set the acl role data
      *
      * @param  array $data
-     * @return AbstractResource
+     * @return AbstractAcl
      */
     public function setData(array $data)
     {
@@ -78,7 +77,7 @@ abstract class AbstractResource implements ResourceInterface, \ArrayAccess
     }
 
     /**
-     * Get the acl object name
+     * Get the acl role name
      *
      * @return string
      */
@@ -88,7 +87,7 @@ abstract class AbstractResource implements ResourceInterface, \ArrayAccess
     }
 
     /**
-     * Get the acl object data
+     * Get the acl role data
      *
      * @return array
      */
@@ -98,7 +97,7 @@ abstract class AbstractResource implements ResourceInterface, \ArrayAccess
     }
 
     /**
-     * Return the string value of the name of the acl object
+     * Return the string value of the name of the acl role
      *
      * @return string
      */

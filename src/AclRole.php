@@ -11,7 +11,7 @@
 /**
  * @namespace
  */
-namespace Pop\Acl\Role;
+namespace Pop\Acl;
 
 /**
  * Acl role class
@@ -23,7 +23,7 @@ namespace Pop\Acl\Role;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
-class Role extends AbstractRole
+class AclRole extends AbstractAcl
 {
 
     /**
@@ -34,17 +34,17 @@ class Role extends AbstractRole
 
     /**
      * Role parent
-     * @var Role
+     * @var AclRole
      */
     protected $parent = null;
 
     /**
      * Add a child role
      *
-     * @param  Role $child
-     * @return Role
+     * @param  AclRole $child
+     * @return AclRole
      */
-    public function addChild(Role $child)
+    public function addChild(AclRole $child)
     {
         if ($child->getName() !== $this->getName()) {
             if (!in_array($child, $this->children, true)) {
@@ -80,10 +80,10 @@ class Role extends AbstractRole
     /**
      * Set the parent role
      *
-     * @param  Role $parent
-     * @return Role
+     * @param  AclRole $parent
+     * @return AclRole
      */
-    public function setParent(Role $parent)
+    public function setParent(AclRole $parent)
     {
         if ($parent->getName() !== $this->getName()) {
             $this->parent = $parent;
@@ -95,7 +95,7 @@ class Role extends AbstractRole
     /**
      * Get the role parent
      *
-     * @return Role
+     * @return AclRole
      */
     public function getParent()
     {
@@ -105,12 +105,11 @@ class Role extends AbstractRole
     /**
      * See if the role has a parent
      *
-     * @return Role
+     * @return boolean
      */
     public function hasParent()
     {
         return (null !== $this->parent);
     }
-
 
 }

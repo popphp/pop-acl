@@ -3,15 +3,15 @@
 namespace Pop\Acl\Test;
 
 use Pop\Acl\Acl;
-use Pop\Acl\Role\Role;
-use Pop\Acl\Resource\Resource;
+use Pop\Acl\AclRole;
+use Pop\Acl\AclResource;
 
 class AclTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testConstructor()
     {
-        $acl = new Acl(new Role('editor'), new Resource('page'));
+        $acl = new Acl(new AclRole('editor'), new AclResource('page'));
         $this->assertInstanceOf('Pop\Acl\Acl', $acl);
         $this->assertEquals('editor', $acl->getRole('editor')->getName());
         $this->assertEquals(1, count($acl->getRoles()));
@@ -23,8 +23,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testAddRole()
     {
-        $editor = new Role('editor');
-        $reader = new Role('reader');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
         $editor->addChild($reader);
         $acl = new Acl();
         $acl->addRole($editor);
@@ -33,8 +33,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testAddRoles()
     {
-        $editor = new Role('editor');
-        $reader = new Role('reader');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
         $acl = new Acl();
         $acl->addRoles([$editor, $reader]);
         $this->assertTrue($acl->hasRole('editor'));
@@ -43,8 +43,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testAddResources()
     {
-        $page = new Resource('page');
-        $user = new Resource('user');
+        $page = new AclResource('page');
+        $user = new AclResource('user');
         $acl  = new Acl();
         $acl->addResources([$page, $user]);
         $this->assertTrue($acl->hasResource('page'));
@@ -74,7 +74,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testAllowBadResourceType()
     {
-        $editor = new Role('editor');
+        $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->allow('editor', ['bad resource']);
     }
@@ -84,19 +84,19 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testAllowResourceNotAdded()
     {
-        $editor = new Role('editor');
+        $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->allow('editor', 'page');
     }
 
     public function testIsAllowed()
     {
-        $admin      = new Role('admin');
-        $publisher  = new Role('publisher');
-        $editor     = new Role('editor');
+        $admin      = new AclRole('admin');
+        $publisher  = new AclRole('publisher');
+        $editor     = new AclRole('editor');
         $editor->id = 1000;
-        $reader     = new Role('reader');
-        $page       = new Resource('page');
+        $reader     = new AclRole('reader');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->addRole($admin);
         $acl->addRole($publisher);
@@ -112,9 +112,9 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testIsAllowedWithAssertionNoPermission()
     {
-        $editor     = new Role('editor');
+        $editor     = new AclRole('editor');
         $editor->id = 1000;
-        $page       = new Resource('page');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->allow('editor', 'page', null, new TestAsset\TestAllowedAssertion($acl, $editor, $page));
         $this->assertTrue($acl->isAllowed('editor', 'page'));
@@ -122,7 +122,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testIsAllowedWithAssertionNoResource()
     {
-        $editor     = new Role('editor');
+        $editor     = new AclRole('editor');
         $editor->id = 1000;
         $acl        = new Acl($editor);
         $acl->allow('editor', null, null, new TestAsset\TestAllowedAssertion($acl, $editor));
@@ -143,15 +143,15 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsAllowedResourceNotAdded()
     {
-        $acl = new Acl(new Role('editor'));
+        $acl = new Acl(new AclRole('editor'));
         $acl->isAllowed('editor', 'page');
     }
 
     public function testRemoveAllowRule()
     {
-        $editor     = new Role('editor');
+        $editor     = new AclRole('editor');
         $editor->id = 1000;
-        $page       = new Resource('page');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion($acl, $editor, $page, 'edit'));
         $this->assertTrue($acl->isAllowed('editor', 'page', 'edit'));
@@ -166,8 +166,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveAllowRuleBadRoleType()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->allow('editor', 'page', 'edit');
         $acl->removeAllowRule(['bad role']);
@@ -178,8 +178,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveAllowRuleRoleNotAdded()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->allow('editor', 'page', 'edit');
         $acl->removeAllowRule('admin');
@@ -190,8 +190,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveAllowRuleNoRule()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->removeAllowRule('editor');
     }
@@ -201,8 +201,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveAllowRuleBadResourceType()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->allow('editor', 'page', 'edit');
         $acl->removeAllowRule('editor', ['bad resource']);
@@ -213,8 +213,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveAllowRuleResourceNotAdded()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->allow('editor', 'page', 'edit');
         $acl->removeAllowRule('editor', 'user');
@@ -222,8 +222,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testIsNotAllowedPermission()
     {
-        $reader = new Role('reader');
-        $page   = new Resource('page');
+        $reader = new AclRole('reader');
+        $page   = new AclResource('page');
         $acl    = new Acl($reader, $page);
         $acl->allow('reader', 'page', 'read');
         $this->assertFalse($acl->isAllowed('reader', 'page', 'edit'));
@@ -231,9 +231,9 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testIsNotAllowedAssertion()
     {
-        $editor     = new Role('editor');
+        $editor     = new AclRole('editor');
         $editor->id = 1;
-        $page       = new Resource('page');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion($acl, $editor, $page, 'edit'));
         $this->assertFalse($acl->isAllowed('editor', 'page', 'edit'));
@@ -262,7 +262,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testDenyBadResourceType()
     {
-        $editor = new Role('editor');
+        $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->deny('editor', ['bad resource']);
     }
@@ -272,15 +272,15 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testDenyResourceNotAdded()
     {
-        $editor = new Role('editor');
+        $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->deny('editor', 'page');
     }
 
     public function testIsDenied()
     {
-        $editor     = new Role('editor');
-        $page       = new Resource('page');
+        $editor     = new AclRole('editor');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit');
         $this->assertTrue($acl->isDenied('editor', 'page', 'edit'));
@@ -288,8 +288,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testIsDeniedWithAssertion()
     {
-        $editor     = new Role('editor');
-        $page       = new Resource('page');
+        $editor     = new AclRole('editor');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit', new TestAsset\TestDeniedAssertion($acl, $editor, $page, 'edit'));
         $this->assertTrue($acl->isDenied('editor', 'page', 'edit'));
@@ -309,15 +309,15 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsDeniedResourceNotAdded()
     {
-        $acl = new Acl(new Role('editor'));
+        $acl = new Acl(new AclRole('editor'));
         $acl->isDenied('editor', 'page');
     }
 
 
     public function testIsDeniedWithAssertionNoPermission()
     {
-        $editor     = new Role('editor');
-        $page       = new Resource('page');
+        $editor     = new AclRole('editor');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->deny('editor', 'page', null, new TestAsset\TestDeniedAssertion($acl, $editor, $page));
         $this->assertTrue($acl->isDenied('editor', 'page'));
@@ -325,7 +325,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testIsDeniedWithAssertionNoResource()
     {
-        $editor     = new Role('editor');
+        $editor     = new AclRole('editor');
         $acl        = new Acl($editor);
         $acl->deny('editor', null, null, new TestAsset\TestDeniedAssertion($acl, $editor));
         $this->assertTrue($acl->isDenied('editor'));
@@ -333,8 +333,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testRemoveDenyRule()
     {
-        $editor     = new Role('editor');
-        $page       = new Resource('page');
+        $editor     = new AclRole('editor');
+        $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit', new TestAsset\TestDeniedAssertion($acl, $editor, $page, 'edit'));
         $this->assertTrue($acl->isDenied('editor', 'page', 'edit'));
@@ -349,8 +349,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveDenyRuleBadRoleType()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit');
         $acl->removeDenyRule(['bad role']);
@@ -361,8 +361,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveDenyRuleRoleNotAdded()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit');
         $acl->removeDenyRule('admin');
@@ -373,8 +373,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveDenyRuleNoRule()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->removeDenyRule('editor');
     }
@@ -384,8 +384,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveDenyRuleBadResourceType()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit');
         $acl->removeDenyRule('editor', ['bad resource']);
@@ -396,8 +396,8 @@ class AclTest extends \PHPUnit_Framework_TestCase
      */
     public function testRemoveDenyRuleResourceNotAdded()
     {
-        $editor = new Role('editor');
-        $page   = new Resource('page');
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit');
         $acl->removeDenyRule('editor', 'user');
@@ -406,10 +406,10 @@ class AclTest extends \PHPUnit_Framework_TestCase
     public function testRoleWithChildren()
     {
         $acl       = new Acl();
-        $page      = new Resource('page');
-        $admin     = new Role('admin');
-        $publisher = new Role('publisher');
-        $editor    = new Role('editor');
+        $page      = new AclResource('page');
+        $admin     = new AclRole('admin');
+        $publisher = new AclRole('publisher');
+        $editor    = new AclRole('editor');
         $publisher->addChild($editor);
         $admin->addChild($publisher);
 

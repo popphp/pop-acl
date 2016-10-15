@@ -2,21 +2,21 @@
 
 namespace Pop\Acl\Test;
 
-use Pop\Acl\Role\Role;
+use Pop\Acl\AclRole;
 
 class RoleTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testConstructor()
     {
-        $role = new Role('editor', [
+        $role = new AclRole('editor', [
             'username' => 'syseditor',
             'id'       => 1001
         ]);
 
         $data = $role->getData();
         
-        $this->assertInstanceOf('Pop\Acl\Role\Role', $role);
+        $this->assertInstanceOf('Pop\Acl\AclRole', $role);
         $this->assertEquals('editor', $role->getName());
         $this->assertEquals('syseditor', $role->username);
         $this->assertEquals('syseditor', $role['username']);
@@ -25,7 +25,7 @@ class RoleTest extends \PHPUnit_Framework_TestCase
 
     public function testMagicMethods()
     {
-        $role = new Role('editor');
+        $role = new AclRole('editor');
         $role->username = 'editor';
         $this->assertEquals('editor', $role->username);
         $this->assertTrue(isset($role->username));
@@ -35,7 +35,7 @@ class RoleTest extends \PHPUnit_Framework_TestCase
 
     public function testOffsetMethods()
     {
-        $role = new Role('editor');
+        $role = new AclRole('editor');
         $role['username'] = 'editor';
         $this->assertEquals('editor', $role['username']);
         $this->assertTrue(isset($role['username']));
@@ -45,14 +45,14 @@ class RoleTest extends \PHPUnit_Framework_TestCase
 
     public function testToString()
     {
-        $role = new Role('editor');
+        $role = new AclRole('editor');
         $this->assertEquals('editor', (string)$role);
     }
 
     public function testAddChild()
     {
-        $editor = new Role('editor');
-        $reader = new Role('reader');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
         $editor->addChild($reader);
         $this->assertTrue($editor->hasChildren());
         $this->assertEquals(1, count($editor->getChildren()));

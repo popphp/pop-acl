@@ -11,7 +11,7 @@
 /**
  * @namespace
  */
-namespace Pop\Acl\Resource;
+namespace Pop\Acl;
 
 /**
  * Acl resource class
@@ -23,7 +23,7 @@ namespace Pop\Acl\Resource;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
-class Resource extends AbstractResource
+class AclResource extends AbstractAcl
 {
 
 }

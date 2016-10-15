@@ -14,8 +14,6 @@
 namespace Pop\Acl;
 
 use Pop\Acl\Assertion\AssertionInterface;
-use Pop\Acl\Role;
-use Pop\Acl\Resource;
 
 /**
  * ACL class
@@ -27,7 +25,7 @@ use Pop\Acl\Resource;
  * @license    http://www.popphp.org/license     New BSD License
  * @version    3.0.0
  */
-class Acl implements AclInterface
+class Acl
 {
 
     /**
@@ -68,11 +66,10 @@ class Acl implements AclInterface
      *
      * Instantiate the ACL object
      *
-     * @param  Role\Role         $role
-     * @param  Resource\Resource $resource
-     * @return Acl
+     * @param  AclRole     $role
+     * @param  AclResource $resource
      */
-    public function __construct(Role\Role $role = null, Resource\Resource $resource = null)
+    public function __construct(AclRole $role = null, AclResource $resource = null)
     {
         if (null !== $role) {
             $this->addRole($role);
@@ -87,7 +84,7 @@ class Acl implements AclInterface
      * Get a role
      *
      * @param  string $role
-     * @return Role\Role
+     * @return AclRole
      */
     public function getRole($role)
     {
@@ -118,10 +115,10 @@ class Acl implements AclInterface
     /**
      * Add a role
      *
-     * @param  Role\Role $role
+     * @param  AclRole $role
      * @return Acl
      */
-    public function addRole(Role\Role $role)
+    public function addRole(AclRole $role)
     {
         if (!isset($this->roles[$role->getName()])) {
             $this->roles[$role->getName()] = $role;
@@ -160,7 +157,7 @@ class Acl implements AclInterface
      * Get a resource
      *
      * @param  string $resource
-     * @return Resource\Resource
+     * @return AclResource
      */
     public function getResource($resource)
     {
@@ -181,10 +178,10 @@ class Acl implements AclInterface
     /**
      * Add a resource
      *
-     * @param Resource\Resource $resource
+     * @param AclResource $resource
      * @return Acl
      */
-    public function addResource(Resource\Resource $resource)
+    public function addResource(AclResource $resource)
     {
         $this->resources[$resource->getName()] = $resource;
         return $this;
@@ -229,7 +226,7 @@ class Acl implements AclInterface
     public function allow($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
         // Check the role
-        if (!is_string($role) && !($role instanceof Role\AbstractRole)) {
+        if (!is_string($role) && !($role instanceof AclRole)) {
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
@@ -244,7 +241,7 @@ class Acl implements AclInterface
 
         // Check the resource
         if (null !== $resource) {
-            if (!is_string($resource) && !($resource instanceof Resource\AbstractResource)) {
+            if (!is_string($resource) && !($resource instanceof AclResource)) {
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {
@@ -289,7 +286,7 @@ class Acl implements AclInterface
     public function removeAllowRule($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
         // Check the role
-        if (!is_string($role) && !($role instanceof Role\AbstractRole)) {
+        if (!is_string($role) && !($role instanceof AclRole)) {
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
@@ -301,7 +298,7 @@ class Acl implements AclInterface
 
         // Check the resource
         if (null !== $resource) {
-            if (!is_string($resource) && !($resource instanceof Resource\AbstractResource)) {
+            if (!is_string($resource) && !($resource instanceof AclResource)) {
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {
@@ -364,7 +361,7 @@ class Acl implements AclInterface
     public function deny($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
         // Check the role
-        if (!is_string($role) && !($role instanceof Role\AbstractRole)) {
+        if (!is_string($role) && !($role instanceof AclRole)) {
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
@@ -379,7 +376,7 @@ class Acl implements AclInterface
 
         // Check the resource
         if (null !== $resource) {
-            if (!is_string($resource) && !($resource instanceof Resource\AbstractResource)) {
+            if (!is_string($resource) && !($resource instanceof AclResource)) {
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {
@@ -424,7 +421,7 @@ class Acl implements AclInterface
     public function removeDenyRule($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
     {
         // Check if the roles has been added
-        if (!is_string($role) && !($role instanceof Role\AbstractRole)) {
+        if (!is_string($role) && !($role instanceof AclRole)) {
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
@@ -436,7 +433,7 @@ class Acl implements AclInterface
 
         // Check the resource
         if (null !== $resource) {
-            if (!is_string($resource) && !($resource instanceof Resource\AbstractResource)) {
+            if (!is_string($resource) && !($resource instanceof AclResource)) {
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {

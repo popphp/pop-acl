@@ -2,21 +2,21 @@
 
 namespace Pop\Acl\Test;
 
-use Pop\Acl\Resource\Resource;
+use Pop\Acl\AclResource;
 
 class ResourceTest extends \PHPUnit_Framework_TestCase
 {
 
     public function testConstructor()
     {
-        $resource = new Resource('user', [
+        $resource = new AclResource('user', [
             'username' => 'admin',
             'id'       => 1001
         ]);
 
         $data = $resource->getData();
 
-        $this->assertInstanceOf('Pop\Acl\Resource\Resource', $resource);
+        $this->assertInstanceOf('Pop\Acl\AclResource', $resource);
         $this->assertEquals('user', $resource->getName());
         $this->assertEquals('admin', $resource->username);
         $this->assertEquals('admin', $resource['username']);
@@ -25,7 +25,7 @@ class ResourceTest extends \PHPUnit_Framework_TestCase
 
     public function testMagicMethods()
     {
-        $resource = new Resource('user');
+        $resource = new AclResource('user');
         $resource->username = 'admin';
         $this->assertEquals('admin', $resource->username);
         $this->assertTrue(isset($resource->username));
@@ -35,7 +35,7 @@ class ResourceTest extends \PHPUnit_Framework_TestCase
 
     public function testOffsetMethods()
     {
-        $resource = new Resource('user');
+        $resource = new AclResource('user');
         $resource['username'] = 'admin';
         $this->assertEquals('admin', $resource['username']);
         $this->assertTrue(isset($resource['username']));
@@ -45,7 +45,7 @@ class ResourceTest extends \PHPUnit_Framework_TestCase
 
     public function testToString()
     {
-        $resource = new Resource('user');
+        $resource = new AclResource('user');
         $this->assertEquals('user', (string)$resource);
     }
 
