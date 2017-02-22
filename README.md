@@ -1,6 +1,9 @@
 pop-acl
 =======
 
+[![Build Status](https://travis-ci.org/popphp/pop-acl.svg?branch=master)](https://travis-ci.org/popphp/pop-acl)
+[![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-acl)](http://cc.popphp.org/pop-acl/)
+
 OVERVIEW
 --------
 `pop-acl` is a full-featured "hybrid" between the standard ACL and RBAC user access concepts.
