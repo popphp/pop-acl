@@ -560,6 +560,54 @@ class Acl
     }
 
     /**
+     * Determine if a user that is assigned many roles is allowed
+     * If one of the roles is allowed, then the user will be allowed (return true)
+     *
+     * @param  array $roles
+     * @param  mixed $resource
+     * @param  mixed $permission
+     * @throws Exception
+     * @return boolean
+     */
+    public function isAllowedMany(array $roles, $resource = null, $permission = null)
+    {
+        $result = false;
+
+        foreach ($roles as $role) {
+            if ($this->isAllowed($role, $resource, $permission)) {
+                $result = true;
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Determine if a user that is assigned many roles is allowed
+     * All of the roles must be allowed to allow the user (return true)
+     *
+     * @param  array $roles
+     * @param  mixed $resource
+     * @param  mixed $permission
+     * @throws Exception
+     * @return boolean
+     */
+    public function isAllowedManyStrict(array $roles, $resource = null, $permission = null)
+    {
+        $result = true;
+
+        foreach ($roles as $role) {
+            if (!$this->isAllowed($role, $resource, $permission)) {
+                $result = false;
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * Determine if the user is denied
      *
      * @param  mixed $role
@@ -631,6 +679,54 @@ class Acl
                 $result = $this->assertions['denied'][$key]->assert($this, $role, $this->resources[(string)$resource]);
             } else {
                 $result = $this->assertions['denied'][$key]->assert($this, $role);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Determine if a user that is assigned many roles is denied
+     * If one of the roles is denied, then the user will be denied (return true)
+     *
+     * @param  array $roles
+     * @param  mixed $resource
+     * @param  mixed $permission
+     * @throws Exception
+     * @return boolean
+     */
+    public function isDeniedMany(array $roles, $resource = null, $permission = null)
+    {
+        $result = false;
+
+        foreach ($roles as $role) {
+            if ($this->isDenied($role, $resource, $permission)) {
+                $result = true;
+                break;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Determine if a user that is assigned many roles is denied
+     * All of the roles must be denied to deny the user (return true)
+     *
+     * @param  array $roles
+     * @param  mixed $resource
+     * @param  mixed $permission
+     * @throws Exception
+     * @return boolean
+     */
+    public function isDeniedManyStrict(array $roles, $resource = null, $permission = null)
+    {
+        $result = true;
+
+        foreach ($roles as $role) {
+            if (!$this->isDenied($role, $resource, $permission)) {
+                $result = false;
+                break;
             }
         }
 

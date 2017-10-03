@@ -103,11 +103,115 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl->addRole($reader);
         $acl->allow('admin');
         $acl->allow('publisher', 'page');
-        $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion($acl, $editor, $page, 'edit'));
+        $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
         $this->assertTrue($acl->isAllowed('editor', 'page', 'edit'));
         $this->assertTrue($acl->isAllowed('admin'));
         $this->assertTrue($acl->isAllowed('publisher', 'page'));
         $this->assertFalse($acl->isAllowed('reader', 'page', 'edit'));
+    }
+
+    public function testIsAllowedMany()
+    {
+        $acl = new Acl();
+
+        $admin  = new AclRole('admin');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+
+        $page = new AclResource('page');
+
+        $acl->addRoles([$admin, $editor, $reader]);
+        $acl->addResource($page);
+
+        $acl->allow('admin', 'page', 'create')
+            ->allow('editor', 'page', 'edit')
+            ->allow('reader', 'page', 'read');
+
+        $user = new \stdClass();
+        $user->roles = [
+            1 => 'admin',
+            2 => 'editor'
+        ];
+
+        $this->assertTrue($acl->isAllowedMany($user->roles, 'page', 'create'));
+    }
+
+    public function testIsAllowedManyStrict()
+    {
+        $acl = new Acl();
+
+        $admin  = new AclRole('admin');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+
+        $page = new AclResource('page');
+
+        $acl->addRoles([$admin, $editor, $reader]);
+        $acl->addResource($page);
+
+        $acl->allow('admin', 'page', 'create')
+            ->allow('editor', 'page', 'edit')
+            ->allow('reader', 'page', 'read');
+
+        $user = new \stdClass();
+        $user->roles = [
+            1 => 'admin',
+            2 => 'editor'
+        ];
+
+        $this->assertFalse($acl->isAllowedManyStrict($user->roles, 'page', 'create'));
+    }
+
+    public function testIsDeniedMany()
+    {
+        $acl = new Acl();
+
+        $admin  = new AclRole('admin');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+
+        $page = new AclResource('page');
+
+        $acl->addRoles([$admin, $editor, $reader]);
+        $acl->addResource($page);
+
+        $acl->deny('admin', 'page', 'create')
+            ->deny('editor', 'page', 'edit')
+            ->deny('reader', 'page', 'read');
+
+        $user = new \stdClass();
+        $user->roles = [
+            1 => 'admin',
+            2 => 'editor'
+        ];
+
+        $this->assertTrue($acl->isDeniedMany($user->roles, 'page', 'create'));
+    }
+
+    public function testIsDeniedManyStrict()
+    {
+        $acl = new Acl();
+
+        $admin  = new AclRole('admin');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+
+        $page = new AclResource('page');
+
+        $acl->addRoles([$admin, $editor, $reader]);
+        $acl->addResource($page);
+
+        $acl->deny('admin', 'page', 'create')
+            ->deny('editor', 'page', 'edit')
+            ->deny('reader', 'page', 'read');
+
+        $user = new \stdClass();
+        $user->roles = [
+            1 => 'admin',
+            2 => 'editor'
+        ];
+
+        $this->assertFalse($acl->isDeniedManyStrict($user->roles, 'page', 'create'));
     }
 
     public function testIsAllowedWithAssertionNoPermission()
@@ -116,7 +220,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $editor->id = 1000;
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
-        $acl->allow('editor', 'page', null, new TestAsset\TestAllowedAssertion($acl, $editor, $page));
+        $acl->allow('editor', 'page', null, new TestAsset\TestAllowedAssertion());
         $this->assertTrue($acl->isAllowed('editor', 'page'));
     }
 
@@ -125,7 +229,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $editor     = new AclRole('editor');
         $editor->id = 1000;
         $acl        = new Acl($editor);
-        $acl->allow('editor', null, null, new TestAsset\TestAllowedAssertion($acl, $editor));
+        $acl->allow('editor', null, null, new TestAsset\TestAllowedAssertion());
         $this->assertTrue($acl->isAllowed('editor'));
     }
 
@@ -153,9 +257,9 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $editor->id = 1000;
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
-        $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion($acl, $editor, $page, 'edit'));
+        $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
         $this->assertTrue($acl->isAllowed('editor', 'page', 'edit'));
-        $acl->removeAllowRule('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion($acl, $editor, $page, 'edit'));
+        $acl->removeAllowRule('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
         $acl->removeAllowRule('editor', 'page');
         $acl->removeAllowRule('editor');
         $this->assertFalse($acl->isAllowed('editor', 'page', 'edit'));
@@ -235,7 +339,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $editor->id = 1;
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
-        $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion($acl, $editor, $page, 'edit'));
+        $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
         $this->assertFalse($acl->isAllowed('editor', 'page', 'edit'));
     }
 
@@ -291,7 +395,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $editor     = new AclRole('editor');
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
-        $acl->deny('editor', 'page', 'edit', new TestAsset\TestDeniedAssertion($acl, $editor, $page, 'edit'));
+        $acl->deny('editor', 'page', 'edit', new TestAsset\TestDeniedAssertion());
         $this->assertTrue($acl->isDenied('editor', 'page', 'edit'));
     }
 
@@ -319,7 +423,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $editor     = new AclRole('editor');
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
-        $acl->deny('editor', 'page', null, new TestAsset\TestDeniedAssertion($acl, $editor, $page));
+        $acl->deny('editor', 'page', null, new TestAsset\TestDeniedAssertion());
         $this->assertTrue($acl->isDenied('editor', 'page'));
     }
 
@@ -327,7 +431,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
     {
         $editor     = new AclRole('editor');
         $acl        = new Acl($editor);
-        $acl->deny('editor', null, null, new TestAsset\TestDeniedAssertion($acl, $editor));
+        $acl->deny('editor', null, null, new TestAsset\TestDeniedAssertion());
         $this->assertTrue($acl->isDenied('editor'));
     }
 
@@ -336,9 +440,9 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $editor     = new AclRole('editor');
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
-        $acl->deny('editor', 'page', 'edit', new TestAsset\TestDeniedAssertion($acl, $editor, $page, 'edit'));
+        $acl->deny('editor', 'page', 'edit', new TestAsset\TestDeniedAssertion());
         $this->assertTrue($acl->isDenied('editor', 'page', 'edit'));
-        $acl->removeDenyRule('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion($acl, $editor, $page, 'edit'));
+        $acl->removeDenyRule('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
         $acl->removeDenyRule('editor', 'page');
         $acl->removeDenyRule('editor');
         $this->assertFalse($acl->isDenied('editor', 'page', 'edit'));
