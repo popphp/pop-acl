@@ -230,7 +230,7 @@ class Acl
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
-            throw new Exception('Error: That role has not been added.');
+            throw new Exception("Error: The role '" . (string)$role . "' has not been added.");
         }
 
         $role = $this->roles[(string)$role];
@@ -245,7 +245,7 @@ class Acl
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {
-                throw new Exception('Error: That resource has not been added.');
+                throw new Exception("Error: The resource '" . (string)$resource . "' has not been added.");
             }
 
             $resource = $this->resources[(string)$resource];
@@ -290,10 +290,10 @@ class Acl
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
-            throw new Exception('Error: That role has not been added.');
+            throw new Exception("Error: The role '" . (string)$role . "' has not been added.");
         }
         if (!isset($this->allowed[(string)$role])) {
-            throw new Exception('Error: That role has no allow rules associated with it.');
+            throw new Exception("Error: The role '" . (string)$role . "' has no allow rules associated with it.");
         }
 
         // Check the resource
@@ -302,7 +302,7 @@ class Acl
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {
-                throw new Exception('Error: That resource has not been added.');
+                throw new Exception("Error: The resource '" . (string)$resource . "' has not been added.");
             }
         }
 
@@ -365,7 +365,7 @@ class Acl
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
-            throw new Exception('Error: That role has not been added.');
+            throw new Exception("Error: The role '" . (string)$role . "' has not been added.");
         }
 
         $role = $this->roles[(string)$role];
@@ -380,7 +380,7 @@ class Acl
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {
-                throw new Exception('Error: That resource has not been added.');
+                throw new Exception("Error: The resource '" . (string)$resource . "' has not been added.");
             }
 
             $resource = $this->resources[(string)$resource];
@@ -425,10 +425,10 @@ class Acl
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
         }
         if (!isset($this->roles[(string)$role])) {
-            throw new Exception('Error: That role has not been added.');
+            throw new Exception("Error: The role '" . (string)$role . "' has not been added.");
         }
         if (!isset($this->denied[(string)$role])) {
-            throw new Exception('Error: That role has no deny rules associated with it.');
+            throw new Exception("Error: The role '" . (string)$role . "' has no deny rules associated with it.");
         }
 
         // Check the resource
@@ -437,7 +437,7 @@ class Acl
                 throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
             }
             if (!isset($this->resources[(string)$resource])) {
-                throw new Exception('Error: That resource has not been added.');
+                throw new Exception("Error: The resource '" . (string)$resource . "' has not been added.");
             }
         }
 
@@ -498,13 +498,13 @@ class Acl
 
         // Check if the roles has been added
         if (!isset($this->roles[(string)$role])) {
-            throw new Exception('Error: That role has not been added.');
+            throw new Exception("Error: The role '" . (string)$role . "' has not been added.");
         }
 
         $role = $this->roles[(string)$role];
 
         if ((null !== $resource) && !isset($this->resources[(string)$resource])) {
-            throw new Exception('Error: That resource has not been added.');
+            throw new Exception("Error: The resource '" . (string)$resource . "' has not been added.");
         }
 
         // Get assertion key
@@ -622,13 +622,13 @@ class Acl
 
         // Check if the roles has been added
         if (!isset($this->roles[(string)$role])) {
-            throw new Exception('Error: That role has not been added.');
+            throw new Exception("Error: The role '" . (string)$role . "' has not been added.");
         }
 
         $role = $this->roles[(string)$role];
 
         if ((null !== $resource) && !isset($this->resources[(string)$resource])) {
-            throw new Exception('Error: That resource has not been added.');
+            throw new Exception("Error: The resource '" . (string)$resource . "' has not been added.");
         }
 
         // Get assertion key
