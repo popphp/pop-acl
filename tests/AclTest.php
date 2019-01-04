@@ -11,6 +11,7 @@ class AclTest extends \PHPUnit_Framework_TestCase
 
     public function testConstructor()
     {
+        $acl = new Acl([new AclRole('editor')], [new AclResource('page')]);
         $acl = new Acl(new AclRole('editor'), new AclResource('page'));
         $this->assertInstanceOf('Pop\Acl\Acl', $acl);
         $this->assertEquals('editor', $acl->getRole('editor')->getName());
@@ -51,39 +52,35 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($acl->hasResource('user'));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testAllowBadRoleType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $acl = new Acl();
         $acl->allow(['bad role']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testAllowRoleNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $acl = new Acl();
         $acl->allow('editor');
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testAllowBadResourceType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->allow('editor', ['bad resource']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testAllowResourceNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->allow('editor', 'page');
@@ -233,20 +230,18 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($acl->isAllowed('editor'));
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testIsAllowedRoleNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $acl = new Acl();
         $acl->isAllowed('editor');
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testIsAllowedResourceNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $acl = new Acl(new AclRole('editor'));
         $acl->isAllowed('editor', 'page');
     }
@@ -259,17 +254,16 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl        = new Acl($editor, $page);
         $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
         $this->assertTrue($acl->isAllowed('editor', 'page', 'edit'));
-        $acl->removeAllowRule('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
+        $acl->removeAllowRule('editor', 'page', 'edit');
         $acl->removeAllowRule('editor', 'page');
         $acl->removeAllowRule('editor');
         $this->assertFalse($acl->isAllowed('editor', 'page', 'edit'));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testRemoveAllowRuleBadRoleType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -277,11 +271,10 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl->removeAllowRule(['bad role']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testRemoveAllowRuleRoleNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -289,22 +282,10 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl->removeAllowRule('admin');
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
-    public function testRemoveAllowRuleNoRule()
-    {
-        $editor = new AclRole('editor');
-        $page   = new AclResource('page');
-        $acl    = new Acl($editor, $page);
-        $acl->removeAllowRule('editor');
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testRemoveAllowRuleBadResourceType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -312,11 +293,10 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl->removeAllowRule('editor', ['bad resource']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testRemoveAllowRuleResourceNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -343,39 +323,35 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($acl->isAllowed('editor', 'page', 'edit'));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testDenyBadRoleType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $acl = new Acl();
         $acl->deny(['bad role']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testDenyRoleNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $acl = new Acl();
         $acl->deny('editor');
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testDenyBadResourceType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->deny('editor', ['bad resource']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testDenyResourceNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $editor = new AclRole('editor');
         $acl    = new Acl($editor);
         $acl->deny('editor', 'page');
@@ -399,24 +375,21 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($acl->isDenied('editor', 'page', 'edit'));
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testIsDeniedRoleNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $acl = new Acl();
         $acl->isDenied('editor');
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testIsDeniedResourceNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $acl = new Acl(new AclRole('editor'));
         $acl->isDenied('editor', 'page');
     }
-
 
     public function testIsDeniedWithAssertionNoPermission()
     {
@@ -442,17 +415,16 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl        = new Acl($editor, $page);
         $acl->deny('editor', 'page', 'edit', new TestAsset\TestDeniedAssertion());
         $this->assertTrue($acl->isDenied('editor', 'page', 'edit'));
-        $acl->removeDenyRule('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
+        $acl->removeDenyRule('editor', 'page', 'edit');
         $acl->removeDenyRule('editor', 'page');
         $acl->removeDenyRule('editor');
         $this->assertFalse($acl->isDenied('editor', 'page', 'edit'));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testRemoveDenyRuleBadRoleType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -460,11 +432,10 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl->removeDenyRule(['bad role']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testRemoveDenyRuleRoleNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -472,22 +443,10 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl->removeDenyRule('admin');
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
-    public function testRemoveDenyRuleNoRule()
-    {
-        $editor = new AclRole('editor');
-        $page   = new AclResource('page');
-        $acl    = new Acl($editor, $page);
-        $acl->removeDenyRule('editor');
-    }
-
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testRemoveDenyRuleBadResourceType()
     {
+        $this->expectException('InvalidArgumentException');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -495,11 +454,10 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $acl->removeDenyRule('editor', ['bad resource']);
     }
 
-    /**
-     * @expectedException \Pop\Acl\Exception
-     */
     public function testRemoveDenyRuleResourceNotAdded()
     {
+        $this->expectException('Pop\Acl\Exception');
+
         $editor = new AclRole('editor');
         $page   = new AclResource('page');
         $acl    = new Acl($editor, $page);
@@ -524,6 +482,38 @@ class AclTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($acl->isAllowed('admin', 'page', 'edit'));
         $this->assertTrue($acl->isAllowed('publisher', 'page', 'edit'));
         $this->assertTrue($acl->isAllowed('editor', 'page', 'edit'));
+    }
+
+    public function testBadAllowedAssertionKey()
+    {
+        $this->expectException('InvalidArgumentException');
+
+        $acl = new TestAsset\BadAcl();
+        $acl->badAllowedAssertion();
+    }
+
+    public function testBadDeniedAssertionKey()
+    {
+        $this->expectException('InvalidArgumentException');
+
+        $acl = new TestAsset\BadAcl();
+        $acl->badDeniedAssertion();
+    }
+
+    public function testBadGetAssertionKey()
+    {
+        $this->expectException('InvalidArgumentException');
+
+        $acl = new TestAsset\BadAcl();
+        $acl->badGetAssertionKey();
+    }
+
+    public function testBadHasAssertionKey()
+    {
+        $this->expectException('InvalidArgumentException');
+
+        $acl = new TestAsset\BadAcl();
+        $acl->badHasAssertionKey();
     }
 
 }
