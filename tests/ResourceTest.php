@@ -3,8 +3,9 @@
 namespace Pop\Acl\Test;
 
 use Pop\Acl\AclResource;
+use PHPUnit\Framework\TestCase;
 
-class ResourceTest extends \PHPUnit_Framework_TestCase
+class ResourceTest extends TestCase
 {
 
     public function testConstructor()

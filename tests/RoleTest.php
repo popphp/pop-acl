@@ -3,8 +3,9 @@
 namespace Pop\Acl\Test;
 
 use Pop\Acl\AclRole;
+use PHPUnit\Framework\TestCase;
 
-class RoleTest extends \PHPUnit_Framework_TestCase
+class RoleTest extends TestCase
 {
 
     public function testConstructor()

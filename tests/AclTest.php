@@ -5,8 +5,9 @@ namespace Pop\Acl\Test;
 use Pop\Acl\Acl;
 use Pop\Acl\AclRole;
 use Pop\Acl\AclResource;
+use PHPUnit\Framework\TestCase;
 
-class AclTest extends \PHPUnit_Framework_TestCase
+class AclTest extends TestCase
 {
 
     public function testConstructor()
