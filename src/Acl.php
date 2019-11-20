@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2020 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -21,9 +21,9 @@ use Pop\Acl\Assertion\AssertionInterface;
  * @category   Pop
  * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2019 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2020 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.2.0
+ * @version    3.2.1
  */
 class Acl
 {
@@ -148,7 +148,6 @@ class Acl
      * Add roles
      *
      * @param  array $roles
-     * @throws Exception
      * @return Acl
      */
     public function addRoles(array $roles)
@@ -399,10 +398,12 @@ class Acl
                         } else if ((null !== $resource) && (null !== $permission) &&
                             isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
                             (count($this->allowed[(string)$roleToCheck][(string)$resource]) > 0)) {
-                            $permissions = (!is_array($permission)) ? [$permission] : $permission;
-                            $result      = (count(
-                                array_intersect($permissions, $this->allowed[(string)$roleToCheck][(string)$resource])) == count($permissions)
+                            $permissions        = (!is_array($permission)) ? [$permission] : $permission;
+                            $allowedPermissions = array_intersect(
+                                $permissions, $this->allowed[(string)$roleToCheck][(string)$resource]
                             );
+
+                            $result = (count($allowedPermissions) == count($permissions));
                         }
                     }
                     $roleToCheck = $roleToCheck->getParent();
@@ -453,7 +454,6 @@ class Acl
      * @param  array $roles
      * @param  mixed $resource
      * @param  mixed $permission
-     * @throws Exception
      * @return boolean
      */
     public function isAllowedManyStrict(array $roles, $resource = null, $permission = null)
