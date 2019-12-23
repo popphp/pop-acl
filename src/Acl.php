@@ -62,6 +62,12 @@ class Acl
     ];
 
     /**
+     * Array of policies
+     * @var array
+     */
+    protected $policies = [];
+
+    /**
      * Constructor
      *
      * Instantiate the ACL object
@@ -573,6 +579,71 @@ class Acl
         }
 
         return $result;
+    }
+
+    /**
+     * Add policy
+     *
+     * @param  string $method
+     * @param  mixed  $role
+     * @param  mixed  $resource
+     * @return Acl
+     */
+    public function addPolicy($method, $role, $resource = null)
+    {
+        $this->policies[] = [
+            'method'   => $method,
+            'role'     => $role,
+            'resource' => $resource
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Evaluate policies
+     *
+     * @return boolean
+     */
+    public function evaluatePolicies()
+    {
+        $result = true;
+
+        foreach ($this->policies as $policy) {
+            $result = $this->evaluatePolicy($policy['method'], $policy['role'], $policy['resource']);
+            if (!$result) {
+                return false;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Evaluate policy
+     *
+     * @param  string $method
+     * @param  mixed  $role
+     * @param  mixed  $resource
+     * @throws Exception
+     * @return boolean
+     */
+    public function evaluatePolicy($method, $role, $resource = null)
+    {
+        if (is_string($role) && ($this->verifyRole($role))) {
+            $role = $this->roles[(string)$role];
+        }
+
+        if (!in_array('Pop\Acl\Policy\PolicyTrait', class_uses($role))) {
+            throw new Exception('Error: The role must use Pop\Acl\Policy\PolicyTrait.');
+        }
+
+        if (null !== $resource) {
+            $this->verifyResource($resource);
+            $resource = $this->resources[(string)$resource];
+        }
+
+        return $role->can($method, $resource);
     }
 
     /**
