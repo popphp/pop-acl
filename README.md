@@ -7,8 +7,8 @@ pop-acl
 OVERVIEW
 --------
 `pop-acl` is a full-featured "hybrid" between the standard ACL and RBAC user access concepts.
-Beyond granting or denying basic user access, it provides support for roles, resources,
-inherited permissions and also assertions and policies for fine-grain access-control.
+Beyond allowing or denying basic user access, it provides support for roles, resources,
+permissions as well as assertions and policies for fine-grain access-control.
 
 `pop-acl` is a component of the [Pop PHP Framework](http://www.popphp.org/).
 
