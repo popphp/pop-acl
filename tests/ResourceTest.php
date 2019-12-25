@@ -15,7 +15,7 @@ class ResourceTest extends TestCase
             'id'       => 1001
         ]);
 
-        $data = $resource->getData();
+        $data = $resource->toArray();
 
         $this->assertInstanceOf('Pop\Acl\AclResource', $resource);
         $this->assertEquals('user', $resource->getName());

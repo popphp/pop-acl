@@ -517,4 +517,55 @@ class AclTest extends TestCase
         $acl->badHasAssertionKey();
     }
 
+    public function testEvaluatePolicyTrue()
+    {
+        $acl = new Acl();
+        $acl->addRole(new TestAsset\User(1001, true));
+        $acl->addResource(new AclResource('page', ['id' => 2001, 'user_id' => 1001]));
+        $acl->addPolicy('create', 'user', 'page');
+
+        $this->assertTrue($acl->evaluatePolicies());
+    }
+
+    public function testEvaluatePolicyFalse()
+    {
+        $acl = new Acl();
+        $acl->addRole(new TestAsset\User(1001, false));
+        $acl->addResource(new AclResource('page', ['id' => 2001, 'user_id' => 1001]));
+        $acl->addPolicy('create', 'user', 'page');
+
+        $this->assertFalse($acl->evaluatePolicies());
+    }
+
+    public function testEvaluatePolicyException()
+    {
+        $this->expectException('Pop\Acl\Exception');
+
+        $acl = new Acl();
+        $acl->addRole(new TestAsset\BadUser(1001, false));
+        $acl->addResource(new AclResource('page', ['id' => 2001, 'user_id' => 1001]));
+        $acl->addPolicy('create', 'user', 'page');
+        $this->assertFalse($acl->evaluatePolicies());
+    }
+
+    public function testEvaluatePolicyIsAllowed()
+    {
+        $acl = new Acl();
+        $acl->addRole(new TestAsset\User(1001, true));
+        $acl->addResource(new AclResource('page', ['id' => 2001, 'user_id' => 1001]));
+        $acl->addPolicy('create', 'user', 'page');
+
+        $this->assertTrue($acl->isAllowed('user', 'page'));
+    }
+
+    public function testEvaluatePolicyIsDenied()
+    {
+        $acl = new Acl();
+        $acl->addRole(new TestAsset\User(1001, false));
+        $acl->addResource(new AclResource('page', ['id' => 2001, 'user_id' => 1001]));
+        $acl->addPolicy('create', 'user', 'page');
+
+        $this->assertTrue($acl->isDenied('user', 'page'));
+    }
+
 }

@@ -15,7 +15,7 @@ class RoleTest extends TestCase
             'id'       => 1001
         ]);
 
-        $data = $role->getData();
+        $data = $role->toArray();
         
         $this->assertInstanceOf('Pop\Acl\AclRole', $role);
         $this->assertEquals('editor', $role->getName());

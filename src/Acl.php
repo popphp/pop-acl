@@ -417,13 +417,18 @@ class Acl
             }
         }
 
-        // Check for assertion
+        // Check for assertions
         if (($result) && ($this->hasAssertionKey('allowed', $role, $resource, $permission))) {
             $assertionKey      = $this->getAssertionKey('allowed', $role, $resource, $permission);
             $assertionRole     = $this->roles[(string)$role];
             $assertionResource = (null !== $resource) ?  $this->resources[(string)$resource] : null;
             $result            =
                 $this->assertions['allowed'][$assertionKey]->assert($this, $assertionRole, $assertionResource, $permission);
+        }
+
+        // Check for policies
+        if ($this->hasPolicies()) {
+            $result = $this->evaluatePolicies();
         }
 
         return $result;
@@ -521,13 +526,18 @@ class Acl
             }
         }
 
-        // Check for assertion
+        // Check for assertions
         if ($this->hasAssertionKey('denied', $role, $resource, $permission)) {
             $assertionKey      = $this->getAssertionKey('denied', $role, $resource, $permission);
             $assertionRole     = $this->roles[(string)$role];
             $assertionResource = (null !== $resource) ?  $this->resources[(string)$resource] : null;
             $result            =
                 $this->assertions['denied'][$assertionKey]->assert($this, $assertionRole, $assertionResource, $permission);
+        }
+
+        // Check for policies
+        if ($this->hasPolicies()) {
+            $result = (!$this->evaluatePolicies());
         }
 
         return $result;
@@ -598,6 +608,16 @@ class Acl
         ];
 
         return $this;
+    }
+
+    /**
+     * Has policies
+     *
+     * @return boolean
+     */
+    public function hasPolicies()
+    {
+        return (count($this->policies) > 0);
     }
 
     /**
