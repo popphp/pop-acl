@@ -206,7 +206,6 @@ class User
 The above policy class can enforce whether or not a user can create, update or delete a page resource.
 
 ```php
-
 $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1002]);
 $admin  = new User(1001, true);
 $editor = new User(1002, false);
@@ -222,7 +221,6 @@ For a more advanced example, the policy class can be a role class, which extends
 class. This allows the main Acl object to evaluate any policies added to it.
 
 ```php
-
 use Pop\Acl\Acl;
 use Pop\Acl\AclRole;
 use Pop\Acl\AclResource;
@@ -259,7 +257,6 @@ class User extends AclRole
 Then the user role and policy can be added to the main Acl object:
 
 ```php
-
 $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1002]);
 $admin  = new User('admin', 1001, true);
 $editor = new User('editor', 1002, false);
@@ -272,10 +269,17 @@ $acl->addPolicy('create', 'editor', 'page');
 $acl->addPolicy('update', 'admin', 'page');
 $acl->addPolicy('update', 'editor', 'page');
 
-var_dump($acl->evaluatePolicy('create', 'admin', 'page'));  // Returns true, because the user is an admin
-var_dump($acl->evaluatePolicy('create', 'editor', 'page')); // Returns false, because the user is an editor (not an admin)
-var_dump($acl->evaluatePolicy('update', 'admin', 'page'));  // Returns false, because the admin doesn't "own" the page
-var_dump($acl->evaluatePolicy('update', 'editor', 'page')); // Returns true, because the editor does "own" the page
+// Returns true, because the user is an admin
+var_dump($acl->evaluatePolicy('create', 'admin', 'page'));  
+
+// Returns false, because the user is an editor (not an admin)
+var_dump($acl->evaluatePolicy('create', 'editor', 'page')); 
+
+// Returns false, because the admin doesn't "own" the page
+var_dump($acl->evaluatePolicy('update', 'admin', 'page'));  
+
+// Returns true, because the editor does "own" the page
+var_dump($acl->evaluatePolicy('update', 'editor', 'page')); 
 
 ```
 
@@ -285,11 +289,17 @@ methods are called, based on the role and resource being passed into those metho
 above, you can call the following and it will behave similarly as above:
 
 ```php
+// Returns true, because the user is an admin
+var_dump($acl->isAllowed('admin', 'page', 'create'));  
 
-var_dump($acl->isAllowed('admin', 'page', 'create'));  // Returns true, because the user is an admin
-var_dump($acl->isAllowed('editor', 'page', 'create')); // Returns false, because the user is an editor (not an admin)
-var_dump($acl->isAllowed('admin', 'page', 'update'));  // Returns false, because the admin doesn't "own" the page
-var_dump($acl->isAllowed('editor', 'page', 'update')); // Returns true, because the editor does "own" the page
+// Returns false, because the user is an editor (not an admin)
+var_dump($acl->isAllowed('editor', 'page', 'create')); 
+
+// Returns false, because the admin doesn't "own" the page
+var_dump($acl->isAllowed('admin', 'page', 'update'));  
+
+// Returns true, because the editor does "own" the page
+var_dump($acl->isAllowed('editor', 'page', 'update')); 
 
 ```
 
