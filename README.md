@@ -98,7 +98,7 @@ USING ASSERTIONS
 ----------------
 
 If you want more fine-grain control over permissions and who is allowed to do what, you can use assertions.
-First, define the assertion class, which implements the `Pop\Acl\Assertion\AssertionInterface. In this example,
+First, define the assertion class, which implements the `Pop\Acl\Assertion\AssertionInterface`. In this example,
 we want to check that the user "owns" the resource via a matching user ID.
 
 ```php
@@ -232,9 +232,9 @@ class User extends AclRole
 
     use Pop\Acl\Policy\PolicyTrait;
 
-    public function __construct($id, $isAdmin)
+    public function __construct($name, $id, $isAdmin)
     {
-        parent::__construct('user', ['id' => $id, 'isAdmin' => $isAdmin]);
+        parent::__construct($name, ['id' => $id, 'isAdmin' => $isAdmin]);
     }
 
     public function create(User $user, AclResource $page)
