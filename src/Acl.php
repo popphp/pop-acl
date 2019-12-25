@@ -428,7 +428,7 @@ class Acl
 
         // Check for policies
         if ($this->hasPolicies()) {
-            $result = $this->evaluatePolicies();
+            $result = $this->evaluatePolicies($role, $resource);
         }
 
         return $result;
@@ -537,7 +537,7 @@ class Acl
 
         // Check for policies
         if ($this->hasPolicies()) {
-            $result = (!$this->evaluatePolicies());
+            $result = (!$this->evaluatePolicies($role, $resource));
         }
 
         return $result;
@@ -623,16 +623,32 @@ class Acl
     /**
      * Evaluate policies
      *
+     * @param  mixed $role
+     * @param  mixed $resource
      * @return boolean
      */
-    public function evaluatePolicies()
+    public function evaluatePolicies($role = null, $resource = null)
     {
-        $result = true;
+        $result         = true;
+        $policyRole     = null;
+        $policyResource = null;
+
+        if (null !== $role) {
+            $this->verifyRole($role);
+            $policyRole = ($role instanceof AclRole) ? $role->getName() : $role;
+        }
+        if (null !== $resource) {
+            $this->verifyResource($resource);
+            $policyResource = ($resource instanceof AclResource) ? $resource->getName() : $resource;
+        }
 
         foreach ($this->policies as $policy) {
-            $result = $this->evaluatePolicy($policy['method'], $policy['role'], $policy['resource']);
-            if (!$result) {
-                return false;
+            if (((null === $policyRole) || ($policyRole == $policy['role'])) &&
+                ((null === $policyResource) || ($policyResource == $policy['resource']))) {
+                $result = $this->evaluatePolicy($policy['method'], $policy['role'], $policy['resource']);
+                if (!$result) {
+                    return false;
+                }
             }
         }
 
