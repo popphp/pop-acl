@@ -42,7 +42,7 @@ trait PolicyTrait
             array_map('trim', explode(',', $method)) : [$method];
 
         foreach ($methods as $method) {
-            $result = (method_exists($this, $method)) ?
+            $result = (is_callable([$this, $method])) ?
                 $this->{$method}($this, $resource) : false;
 
             if (!$result) {
