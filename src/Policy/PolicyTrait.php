@@ -33,19 +33,20 @@ trait PolicyTrait
      *
      * @param  string      $method
      * @param  AclResource $resource
-     * @return boolean
+     * @return boolean|null
      */
     public function can($method, AclResource $resource = null)
     {
-        $result  = true;
+        $result  = null;
         $methods = (strpos($method, ',') !== false) ?
             array_map('trim', explode(',', $method)) : [$method];
 
         foreach ($methods as $method) {
-            $result = (is_callable([$this, $method])) ?
-                $this->{$method}($this, $resource) : false;
+            if (is_callable([$this, $method])) {
+                $result = $this->{$method}($this, $resource);
+            }
 
-            if (!$result) {
+            if ($result === false) {
                 return false;
             }
         }
