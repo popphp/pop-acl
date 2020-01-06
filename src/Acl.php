@@ -716,7 +716,7 @@ class Acl
         if ((null === $role) && (null === $resource) && (null === $permission)) {
             foreach ($this->policies as $policy) {
                 $result = $this->evaluatePolicy($policy['method'], $policy['role'], $policy['resource']);
-                if (!$result) {
+                if ($result === false) {
                     return false;
                 }
             }
@@ -739,7 +739,7 @@ class Acl
                     ((null === $policyResource) || ($policyResource == $policy['resource'])) &&
                     ((null === $policyMethod) || ($policyMethod == $policy['method']))) {
                     $result = $this->evaluatePolicy($policy['method'], $policy['role'], $policy['resource']);
-                    if (!$result) {
+                    if ($result === false) {
                         return false;
                     }
                 }
