@@ -707,11 +707,11 @@ class Acl
      * @param  mixed $role
      * @param  mixed $resource
      * @param  mixed $permission
-     * @return boolean
+     * @return boolean|null
      */
     public function evaluatePolicies($role = null, $resource = null, $permission = null)
     {
-        $result = true;
+        $result = null;
 
         if ((null === $role) && (null === $resource) && (null === $permission)) {
             foreach ($this->policies as $policy) {
