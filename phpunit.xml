@@ -6,7 +6,6 @@
     </include>
     <report>
       <html outputDirectory="/tmp/pop-acl-cc" lowUpperBound="35" highLowerBound="70"/>
-      <text outputFile="" showUncoveredFiles="true"/>
     </report>
   </coverage>
   <testsuites>
