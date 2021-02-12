@@ -1,7 +1,7 @@
 pop-acl
 =======
 
-[![Build Status](https://github.com/popphp/pop-acl/workflows/phpunit/badge.svg)](https://travis-ci.org/popphp/pop-acl)
+[![Build Status](https://github.com/popphp/pop-acl/workflows/phpunit/badge.svg)](https://github.com/popphp/pop-acl/actions)
 [![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-acl)](http://cc.popphp.org/pop-acl/)
 
 OVERVIEW
