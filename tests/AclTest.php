@@ -23,6 +23,15 @@ class AclTest extends TestCase
         $this->assertTrue($acl->hasResource('page'));
     }
 
+    public function testSetStrict()
+    {
+        $acl = new Acl();
+        $acl->setStrict();
+        $this->assertTrue($acl->isStrict());
+        $acl->setStrict(false);
+        $this->assertFalse($acl->isStrict());
+    }
+
     public function testAddRole()
     {
         $editor = new AclRole('editor');
@@ -89,6 +98,17 @@ class AclTest extends TestCase
 
     public function testIsAllowed()
     {
+        $publisher  = new AclRole('publisher');
+        $page       = new AclResource('page');
+        $acl        = new Acl($page);
+        $acl->addRole($publisher);
+        $acl->deny('publisher', 'page', 'delete');
+        $this->assertTrue($acl->isAllowed('publisher', 'page', 'read'));
+        $this->assertFalse($acl->isAllowed('publisher', 'page', 'delete'));
+    }
+
+    public function testIsAllowedStrict()
+    {
         $admin      = new AclRole('admin');
         $publisher  = new AclRole('publisher');
         $editor     = new AclRole('editor');
@@ -96,6 +116,7 @@ class AclTest extends TestCase
         $reader     = new AclRole('reader');
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
+        $acl->setStrict();
         $acl->addRole($admin);
         $acl->addRole($publisher);
         $acl->addRole($reader);
@@ -253,6 +274,7 @@ class AclTest extends TestCase
         $editor->id = 1000;
         $page       = new AclResource('page');
         $acl        = new Acl($editor, $page);
+        $acl->setStrict();
         $acl->allow('editor', 'page', 'edit', new TestAsset\TestAllowedAssertion());
         $this->assertTrue($acl->isAllowed('editor', 'page', 'edit'));
         $acl->removeAllowRule('editor', 'page', 'edit');
@@ -310,6 +332,7 @@ class AclTest extends TestCase
         $reader = new AclRole('reader');
         $page   = new AclResource('page');
         $acl    = new Acl($reader, $page);
+        $acl->setStrict();
         $acl->allow('reader', 'page', 'read');
         $this->assertFalse($acl->isAllowed('reader', 'page', 'edit'));
     }

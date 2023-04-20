@@ -68,6 +68,12 @@ class Acl
     protected $policies = [];
 
     /**
+     * Strict flag
+     * @var boolean
+     */
+    protected $strict = false;
+
+    /**
      * Constructor
      *
      * Instantiate the ACL object
@@ -223,6 +229,28 @@ class Acl
         }
 
         return $this;
+    }
+
+    /**
+     * Set strict
+     *
+     * @param  boolean $strict
+     * @return Acl
+     */
+    public function setStrict($strict = true)
+    {
+        $this->strict = (bool)$strict;
+        return $this;
+    }
+
+    /**
+     * See if ACL object is set to strict
+     *
+     * @return boolean
+     */
+    public function isStrict()
+    {
+        return $this->strict;
     }
 
     /**
@@ -388,31 +416,37 @@ class Acl
                 $this->verifyResource($resource);
             }
 
-            // Check role
+            // If is not denied
             if (!$this->isDenied($role, $resource, $permission)) {
-                $roleToCheck = $this->roles[(string)$role];
-                while (null !== $roleToCheck) {
-                    if (isset($this->allowed[(string)$roleToCheck])) {
-                        // No explicit resources or permissions
-                        if (count($this->allowed[(string)$roleToCheck]) == 0) {
-                            $result = true;
-                        // Resource set, but no explicit permissions
-                        } else if ((null !== $resource) && isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
-                            (count($this->allowed[(string)$roleToCheck][(string)$resource]) == 0)) {
-                            $result = true;
-                        // Else, has resource and permissions set
-                        } else if ((null !== $resource) && (null !== $permission) &&
-                            isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
-                            (count($this->allowed[(string)$roleToCheck][(string)$resource]) > 0)) {
-                            $permissions        = (!is_array($permission)) ? [$permission] : $permission;
-                            $allowedPermissions = array_intersect(
-                                $permissions, $this->allowed[(string)$roleToCheck][(string)$resource]
-                            );
+                // If not strict, pass
+                if (!$this->strict) {
+                    $result = true;
+                // If strict, check for explicit allow rule
+                } else {
+                    $roleToCheck = $this->roles[(string)$role];
+                    while (null !== $roleToCheck) {
+                        if (isset($this->allowed[(string)$roleToCheck])) {
+                            // No explicit resources or permissions
+                            if (count($this->allowed[(string)$roleToCheck]) == 0) {
+                                $result = true;
+                                // Resource set, but no explicit permissions
+                            } else if ((null !== $resource) && isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
+                                (count($this->allowed[(string)$roleToCheck][(string)$resource]) == 0)) {
+                                $result = true;
+                                // Else, has resource and permissions set
+                            } else if ((null !== $resource) && (null !== $permission) &&
+                                isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
+                                (count($this->allowed[(string)$roleToCheck][(string)$resource]) > 0)) {
+                                $permissions        = (!is_array($permission)) ? [$permission] : $permission;
+                                $allowedPermissions = array_intersect(
+                                    $permissions, $this->allowed[(string)$roleToCheck][(string)$resource]
+                                );
 
-                            $result = (count($allowedPermissions) == count($permissions));
+                                $result = (count($allowedPermissions) == count($permissions));
+                            }
                         }
+                        $roleToCheck = $roleToCheck->getParent();
                     }
-                    $roleToCheck = $roleToCheck->getParent();
                 }
             }
         }
@@ -446,12 +480,21 @@ class Acl
      */
     public function isAllowedMany(array $roles, $resource = null, $permission = null)
     {
-        $result = false;
-
-        foreach ($roles as $role) {
-            if ($this->isAllowed($role, $resource, $permission)) {
-                $result = true;
-                break;
+        if ($this->strict) {
+            $result = true;
+            foreach ($roles as $role) {
+                if (!$this->isAllowed($role, $resource, $permission)) {
+                    $result = false;
+                    break;
+                }
+            }
+        } else {
+            $result = false;
+            foreach ($roles as $role) {
+                if ($this->isAllowed($role, $resource, $permission)) {
+                    $result = true;
+                    break;
+                }
             }
         }
 
@@ -469,16 +512,8 @@ class Acl
      */
     public function isAllowedManyStrict(array $roles, $resource = null, $permission = null)
     {
-        $result = true;
-
-        foreach ($roles as $role) {
-            if (!$this->isAllowed($role, $resource, $permission)) {
-                $result = false;
-                break;
-            }
-        }
-
-        return $result;
+        $this->strict = true;
+        return $this->isAllowedMany($roles, $resource, $permission);
     }
 
     /**
@@ -555,12 +590,21 @@ class Acl
      */
     public function isDeniedMany(array $roles, $resource = null, $permission = null)
     {
-        $result = false;
-
-        foreach ($roles as $role) {
-            if ($this->isDenied($role, $resource, $permission)) {
-                $result = true;
-                break;
+        if ($this->strict) {
+            $result = true;
+            foreach ($roles as $role) {
+                if (!$this->isDenied($role, $resource, $permission)) {
+                    $result = false;
+                    break;
+                }
+            }
+        } else {
+            $result = false;
+            foreach ($roles as $role) {
+                if ($this->isDenied($role, $resource, $permission)) {
+                    $result = true;
+                    break;
+                }
             }
         }
 
@@ -579,16 +623,8 @@ class Acl
      */
     public function isDeniedManyStrict(array $roles, $resource = null, $permission = null)
     {
-        $result = true;
-
-        foreach ($roles as $role) {
-            if (!$this->isDenied($role, $resource, $permission)) {
-                $result = false;
-                break;
-            }
-        }
-
-        return $result;
+        $this->strict = true;
+        return $this->isDeniedMany($roles, $resource, $permission);
     }
 
     /**
