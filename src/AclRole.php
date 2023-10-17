@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Acl;
  * @category   Pop
  * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.4.0
+ * @version    4.0.0
  */
 class AclRole extends AbstractAcl
 {
@@ -30,13 +30,13 @@ class AclRole extends AbstractAcl
      * Role children
      * @var array
      */
-    protected $children = [];
+    protected array $children = [];
 
     /**
      * Role parent
-     * @var AclRole
+     * @var ?AclRole
      */
-    protected $parent = null;
+    protected ?AclRole $parent = null;
 
     /**
      * Add a child role
@@ -44,13 +44,13 @@ class AclRole extends AbstractAcl
      * @param  AclRole $child
      * @return AclRole
      */
-    public function addChild(AclRole $child)
+    public function addChild(AclRole $child): AclRole
     {
         if ($child->getName() !== $this->getName()) {
             if (!in_array($child, $this->children, true)) {
                 $this->children[] = $child;
             }
-            if (null === $child->getParent()) {
+            if ($child->getParent() === null) {
                 $child->setParent($this);
             }
         }
@@ -60,9 +60,9 @@ class AclRole extends AbstractAcl
     /**
      * Has child roles
      *
-     * @return boolean
+     * @return bool
      */
-    public function hasChildren()
+    public function hasChildren(): bool
     {
         return (count($this->children) > 0);
     }
@@ -72,7 +72,7 @@ class AclRole extends AbstractAcl
      *
      * @return array
      */
-    public function getChildren()
+    public function getChildren(): array
     {
         return $this->children;
     }
@@ -83,7 +83,7 @@ class AclRole extends AbstractAcl
      * @param  AclRole $parent
      * @return AclRole
      */
-    public function setParent(AclRole $parent)
+    public function setParent(AclRole $parent): AclRole
     {
         if ($parent->getName() !== $this->getName()) {
             $this->parent = $parent;
@@ -95,9 +95,9 @@ class AclRole extends AbstractAcl
     /**
      * Get the role parent
      *
-     * @return AclRole
+     * @return AclRole|null
      */
-    public function getParent()
+    public function getParent(): AclRole|null
     {
         return $this->parent;
     }
@@ -105,11 +105,11 @@ class AclRole extends AbstractAcl
     /**
      * See if the role has a parent
      *
-     * @return boolean
+     * @return bool
      */
-    public function hasParent()
+    public function hasParent(): bool
     {
-        return (null !== $this->parent);
+        return ($this->parent !== null);
     }
 
 }

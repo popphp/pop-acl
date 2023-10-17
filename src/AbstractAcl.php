@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -14,6 +14,7 @@
 namespace Pop\Acl;
 
 use Pop\Utils;
+use Pop\Utils\Exception;
 
 /**
  * Abstract ACL role class
@@ -21,18 +22,18 @@ use Pop\Utils;
  * @category   Pop
  * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.4.0
+ * @version    4.0.0
  */
 abstract class AbstractAcl extends Utils\ArrayObject
 {
 
     /**
      * Role name
-     * @var string
+     * @var ?string
      */
-    protected $name = null;
+    protected ?string $name = null;
 
     /**
      * Constructor
@@ -40,9 +41,10 @@ abstract class AbstractAcl extends Utils\ArrayObject
      * Instantiate the acl role object
      *
      * @param  string $name
-     * @param  array  $data
+     * @param  array $data
+     * @throws Exception
      */
-    public function __construct($name, array $data = [])
+    public function __construct(string $name, array $data = [])
     {
         $this->setName($name);
         parent::__construct($data);
@@ -54,7 +56,7 @@ abstract class AbstractAcl extends Utils\ArrayObject
      * @param  string $name
      * @return AbstractAcl
      */
-    public function setName($name)
+    public function setName(string $name): AbstractAcl
     {
         $this->name = $name;
         return $this;
@@ -63,9 +65,9 @@ abstract class AbstractAcl extends Utils\ArrayObject
     /**
      * Get the acl role name
      *
-     * @return string
+     * @return string|null
      */
-    public function getName()
+    public function getName(): string|null
     {
         return $this->name;
     }
@@ -75,7 +77,7 @@ abstract class AbstractAcl extends Utils\ArrayObject
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->name;
     }

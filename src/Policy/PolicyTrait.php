@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -21,9 +21,9 @@ use Pop\Acl\AclResource;
  * @category   Pop
  * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.4.0
+ * @version    4.0.0
  */
 trait PolicyTrait
 {
@@ -31,14 +31,14 @@ trait PolicyTrait
     /**
      * Evaluate policy
      *
-     * @param  string      $method
-     * @param  AclResource $resource
-     * @return boolean|null
+     * @param  string       $method
+     * @param  ?AclResource $resource
+     * @return bool|null
      */
-    public function can($method, AclResource $resource = null)
+    public function can(string $method, ?AclResource $resource = null): bool|null
     {
         $result  = null;
-        $methods = (strpos($method, ',') !== false) ?
+        $methods = (str_contains($method, ',')) ?
             array_map('trim', explode(',', $method)) : [$method];
 
         foreach ($methods as $method) {

@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -23,9 +23,9 @@ use Pop\Acl\AclResource;
  * @category   Pop
  * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.4.0
+ * @version    4.0.0
  */
 interface AssertionInterface
 {
@@ -33,12 +33,12 @@ interface AssertionInterface
     /**
      * Evaluate assertion
      *
-     * @param  Acl         $acl
-     * @param  AclRole     $role
-     * @param  AclResource $resource
-     * @param  mixed       $permission
-     * @return boolean
+     * @param  Acl          $acl
+     * @param  AclRole      $role
+     * @param  ?AclResource $resource
+     * @param  mixed        $permission
+     * @return bool
      */
-    public function assert(Acl $acl, AclRole $role, AclResource $resource = null, $permission = null);
+    public function assert(Acl $acl, AclRole $role, ?AclResource $resource = null, mixed $permission = null): bool;
 
 }

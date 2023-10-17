@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
  */
 
@@ -14,6 +14,7 @@
 namespace Pop\Acl;
 
 use Pop\Acl\Assertion\AssertionInterface;
+use InvalidArgumentException;
 
 /**
  * ACL class
@@ -21,9 +22,9 @@ use Pop\Acl\Assertion\AssertionInterface;
  * @category   Pop
  * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@nolainteractive.com>
- * @copyright  Copyright (c) 2009-2023 NOLA Interactive, LLC. (http://www.nolainteractive.com)
+ * @copyright  Copyright (c) 2009-2024 NOLA Interactive, LLC. (http://www.nolainteractive.com)
  * @license    http://www.popphp.org/license     New BSD License
- * @version    3.4.0
+ * @version    4.0.0
  */
 class Acl
 {
@@ -32,31 +33,31 @@ class Acl
      * Array of roles
      * @var array
      */
-    protected $roles = [];
+    protected array $roles = [];
 
     /**
      * Array of resources
      * @var array
      */
-    protected $resources = [];
+    protected array $resources = [];
 
     /**
      * Array of allowed roles, resources and permissions
      * @var array
      */
-    protected $allowed = [];
+    protected array $allowed = [];
 
     /**
      * Array of denied roles, resources and permissions
      * @var array
      */
-    protected $denied = [];
+    protected array $denied = [];
 
     /**
      * Array of assertions
      * @var array
      */
-    protected $assertions = [
+    protected array $assertions = [
         'allowed' => [],
         'denied'  => []
     ];
@@ -65,13 +66,13 @@ class Acl
      * Array of policies
      * @var array
      */
-    protected $policies = [];
+    protected array $policies = [];
 
     /**
      * Strict flag
-     * @var boolean
+     * @var bool
      */
-    protected $strict = false;
+    protected bool $strict = false;
 
     /**
      * Constructor
@@ -103,11 +104,11 @@ class Acl
      * Get a role
      *
      * @param  string $role
-     * @return AclRole
+     * @return AclRole|null
      */
-    public function getRole($role)
+    public function getRole(string $role): AclRole|null
     {
-        return (isset($this->roles[$role])) ? $this->roles[$role] : null;
+        return $this->roles[$role] ?? null;
     }
 
     /**
@@ -115,7 +116,7 @@ class Acl
      *
      * @return array
      */
-    public function getRoles()
+    public function getRoles(): array
     {
         return $this->roles;
     }
@@ -124,9 +125,9 @@ class Acl
      * See if a role has been added
      *
      * @param  string $role
-     * @return boolean
+     * @return bool
      */
-    public function hasRole($role)
+    public function hasRole(string $role): bool
     {
         return (isset($this->roles[$role]));
     }
@@ -137,7 +138,7 @@ class Acl
      * @param  AclRole $role
      * @return Acl
      */
-    public function addRole(AclRole $role)
+    public function addRole(AclRole $role): Acl
     {
         if (!isset($this->roles[$role->getName()])) {
             $this->roles[$role->getName()] = $role;
@@ -162,7 +163,7 @@ class Acl
      * @param  array $roles
      * @return Acl
      */
-    public function addRoles(array $roles)
+    public function addRoles(array $roles): Acl
     {
         foreach ($roles as $role) {
             $this->addRole($role);
@@ -175,20 +176,20 @@ class Acl
      * Get a resource
      *
      * @param  string $resource
-     * @return AclResource
+     * @return AclResource|null
      */
-    public function getResource($resource)
+    public function getResource(string $resource): AclResource|null
     {
-        return (isset($this->resources[$resource])) ? $this->resources[$resource] : null;
+        return $this->resources[$resource] ?? null;
     }
 
     /**
      * See if a resource has been added
      *
      * @param  string $resource
-     * @return boolean
+     * @return bool
      */
-    public function hasResource($resource)
+    public function hasResource(string $resource): bool
     {
         return (isset($this->resources[$resource]));
     }
@@ -199,7 +200,7 @@ class Acl
      * @param AclResource $resource
      * @return Acl
      */
-    public function addResource(AclResource $resource)
+    public function addResource(AclResource $resource): Acl
     {
         $this->resources[$resource->getName()] = $resource;
         return $this;
@@ -210,7 +211,7 @@ class Acl
      *
      * @return array
      */
-    public function getResources()
+    public function getResources(): array
     {
         return $this->resources;
     }
@@ -219,10 +220,9 @@ class Acl
      * Add resources
      *
      * @param  array $resources
-     * @throws Exception
      * @return Acl
      */
-    public function addResources(array $resources)
+    public function addResources(array $resources): Acl
     {
         foreach ($resources as $resource) {
             $this->addResource($resource);
@@ -234,19 +234,19 @@ class Acl
     /**
      * Set strict
      *
-     * @param  boolean $strict
+     * @param  bool $strict
      * @return Acl
      */
-    public function setStrict($strict = true)
+    public function setStrict(bool $strict = true): Acl
     {
-        $this->strict = (bool)$strict;
+        $this->strict = $strict;
         return $this;
     }
 
     /**
      * See if ACL object is set to strict
      *
-     * @return boolean
+     * @return bool
      */
     public function isStrict()
     {
@@ -256,14 +256,14 @@ class Acl
     /**
      * Allow a user role permission to a resource or resources
      *
-     * @param  mixed              $role
-     * @param  mixed              $resource
-     * @param  mixed              $permission
-     * @param  AssertionInterface $assertion
+     * @param  mixed               $role
+     * @param  mixed               $resource
+     * @param  mixed               $permission
+     * @param  ?AssertionInterface $assertion
      * @throws Exception
      * @return Acl
      */
-    public function allow($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
+    public function allow(mixed $role, mixed $resource = null, mixed $permission = null, ?AssertionInterface $assertion = null): Acl
     {
         if ($this->verifyRole($role)) {
             $role = $this->roles[(string)$role];
@@ -272,19 +272,19 @@ class Acl
                 $this->allowed[(string)$role] = [];
             }
 
-            if ((null !== $resource) && ($this->verifyResource($resource))) {
+            if (($resource !== null) && ($this->verifyResource($resource))) {
                 $resource = $this->resources[(string)$resource];
 
                 if (!isset($this->allowed[(string)$role][(string)$resource])) {
                     $this->allowed[(string)$role][(string)$resource] = [];
                 }
-                if (null !== $permission) {
+                if ($permission !== null) {
                     $this->allowed[(string)$role][(string)$resource][] = $permission;
                 }
             }
 
             // If an assertion has been passed
-            if (null !== $assertion) {
+            if ($assertion !== null) {
                 $this->createAssertion($assertion, 'allowed', $role, $resource, $permission);
             }
         }
@@ -301,14 +301,14 @@ class Acl
      * @throws Exception
      * @return Acl
      */
-    public function removeAllowRule($role, $resource = null, $permission = null)
+    public function removeAllowRule(mixed $role, mixed $resource = null, mixed $permission = null): Acl
     {
         if (($this->verifyRole($role)) && isset($this->allowed[(string)$role])) {
             // If only role passed
-            if ((null === $resource) && (null === $permission)) {
+            if (($resource === null) && ($permission === null)) {
                 unset($this->allowed[(string)$role]);
             // If role & resource passed
-            } else if ((null !== $resource) && (null === $permission) && ($this->verifyResource($resource)) &&
+            } else if (($resource !== null) && ($permission === null) && ($this->verifyResource($resource)) &&
                 isset($this->allowed[(string)$role][(string)$resource])) {
                 unset($this->allowed[(string)$role][(string)$resource]);
             // If role, resource & permission passed
@@ -329,14 +329,14 @@ class Acl
     /**
      * Deny a user role permission to a resource or resources
      *
-     * @param  mixed              $role
-     * @param  mixed              $resource
-     * @param  mixed              $permission
-     * @param  AssertionInterface $assertion
+     * @param  mixed               $role
+     * @param  mixed               $resource
+     * @param  mixed               $permission
+     * @param  ?AssertionInterface $assertion
      * @throws Exception
      * @return Acl
      */
-    public function deny($role, $resource = null, $permission = null, AssertionInterface $assertion = null)
+    public function deny(mixed $role, mixed $resource = null, mixed $permission = null, ?AssertionInterface $assertion = null): Acl
     {
         if ($this->verifyRole($role)) {
             $role = $this->roles[(string)$role];
@@ -345,19 +345,19 @@ class Acl
                 $this->denied[(string)$role] = [];
             }
 
-            if ((null !== $resource) && ($this->verifyResource($resource))) {
+            if (($resource !== null) && ($this->verifyResource($resource))) {
                 $resource = $this->resources[(string)$resource];
 
                 if (!isset($this->denied[(string)$role][(string)$resource])) {
                     $this->denied[(string)$role][(string)$resource] = [];
                 }
-                if (null !== $permission) {
+                if ($permission !== null) {
                     $this->denied[(string)$role][(string)$resource][] = $permission;
                 }
             }
 
             // If an assertion has been passed
-            if (null !== $assertion) {
+            if ($assertion !== null) {
                 $this->createAssertion($assertion, 'denied', $role, $resource, $permission);
             }
         }
@@ -374,14 +374,14 @@ class Acl
      * @throws Exception
      * @return Acl
      */
-    public function removeDenyRule($role, $resource = null, $permission = null)
+    public function removeDenyRule(mixed $role, mixed $resource = null, mixed $permission = null): Acl
     {
         if (($this->verifyRole($role)) && isset($this->denied[(string)$role])) {
             // If only role passed
-            if ((null === $resource) && (null === $permission)) {
+            if (($resource === null) && ($permission === null)) {
                 unset($this->denied[(string)$role]);
             // If role & resource passed
-            } else if ((null !== $resource) && (null === $permission) && ($this->verifyResource($resource)) &&
+            } else if (($resource !== null) && ($permission === null) && ($this->verifyResource($resource)) &&
                 isset($this->denied[(string)$role][(string)$resource])) {
                 unset($this->denied[(string)$role][(string)$resource]);
             // If role, resource & permission passed
@@ -405,14 +405,15 @@ class Acl
      * @param  mixed $role
      * @param  mixed $resource
      * @param  mixed $permission
-     * @return boolean
+     * @throws Exception
+     * @return bool
      */
-    public function isAllowed($role, $resource = null, $permission = null)
+    public function isAllowed(mixed $role, mixed $resource = null, mixed $permission = null): bool
     {
         $result = false;
 
         if ($this->verifyRole($role)) {
-            if (null !== $resource) {
+            if ($resource !== null) {
                 $this->verifyResource($resource);
             }
 
@@ -424,17 +425,17 @@ class Acl
                 // If strict, check for explicit allow rule
                 } else {
                     $roleToCheck = $this->roles[(string)$role];
-                    while (null !== $roleToCheck) {
+                    while ($roleToCheck !== null) {
                         if (isset($this->allowed[(string)$roleToCheck])) {
                             // No explicit resources or permissions
                             if (count($this->allowed[(string)$roleToCheck]) == 0) {
                                 $result = true;
                                 // Resource set, but no explicit permissions
-                            } else if ((null !== $resource) && isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
+                            } else if (($resource !== null) && isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
                                 (count($this->allowed[(string)$roleToCheck][(string)$resource]) == 0)) {
                                 $result = true;
                                 // Else, has resource and permissions set
-                            } else if ((null !== $resource) && (null !== $permission) &&
+                            } else if (($resource !== null) && ($permission !== null) &&
                                 isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
                                 (count($this->allowed[(string)$roleToCheck][(string)$resource]) > 0)) {
                                 $permissions        = (!is_array($permission)) ? [$permission] : $permission;
@@ -455,7 +456,7 @@ class Acl
         if (($result) && ($this->hasAssertionKey('allowed', $role, $resource, $permission))) {
             $assertionKey      = $this->getAssertionKey('allowed', $role, $resource, $permission);
             $assertionRole     = $this->roles[(string)$role];
-            $assertionResource = (null !== $resource) ?  $this->resources[(string)$resource] : null;
+            $assertionResource = ($resource !== null) ?  $this->resources[(string)$resource] : null;
             $result            =
                 $this->assertions['allowed'][$assertionKey]->assert($this, $assertionRole, $assertionResource, $permission);
         }
@@ -476,9 +477,9 @@ class Acl
      * @param  mixed $resource
      * @param  mixed $permission
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
-    public function isAllowedMany(array $roles, $resource = null, $permission = null)
+    public function isAllowedMany(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
         if ($this->strict) {
             $result = true;
@@ -508,9 +509,10 @@ class Acl
      * @param  array $roles
      * @param  mixed $resource
      * @param  mixed $permission
-     * @return boolean
+     * @throws Exception
+     * @return bool
      */
-    public function isAllowedManyStrict(array $roles, $resource = null, $permission = null)
+    public function isAllowedManyStrict(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
         $this->strict = true;
         return $this->isAllowedMany($roles, $resource, $permission);
@@ -523,25 +525,25 @@ class Acl
      * @param  mixed $resource
      * @param  mixed $permission
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
-    public function isDenied($role, $resource = null, $permission = null)
+    public function isDenied(mixed $role, mixed $resource = null, mixed $permission = null): bool
     {
         $result = false;
 
         if ($this->verifyRole($role)) {
-            if (null !== $resource) {
+            if ($resource !== null) {
                 $this->verifyResource($resource);
             }
 
             // Check if the user, resource and/or permission is denied
             $roleToCheck = $this->roles[(string)$role];
-            while (null !== $roleToCheck) {
+            while ($roleToCheck !== null) {
                 if (isset($this->denied[(string)$roleToCheck])) {
                     if (count($this->denied[(string)$roleToCheck]) > 0) {
-                        if ((null !== $resource) && array_key_exists((string)$resource, $this->denied[(string)$roleToCheck])) {
+                        if (($resource !== null) && array_key_exists((string)$resource, $this->denied[(string)$roleToCheck])) {
                             if (count($this->denied[(string)$roleToCheck][(string)$resource]) > 0) {
-                                if (null !== $permission) {
+                                if ($permission !== null) {
                                     $permissions = (!is_array($permission)) ? [$permission] : $permission;
                                     foreach ($permissions as $p) {
                                         if (in_array($p, $this->denied[(string)$roleToCheck][(string)$resource])) {
@@ -565,7 +567,7 @@ class Acl
         if ($this->hasAssertionKey('denied', $role, $resource, $permission)) {
             $assertionKey      = $this->getAssertionKey('denied', $role, $resource, $permission);
             $assertionRole     = $this->roles[(string)$role];
-            $assertionResource = (null !== $resource) ?  $this->resources[(string)$resource] : null;
+            $assertionResource = ($resource !== null) ?  $this->resources[(string)$resource] : null;
             $result            =
                 $this->assertions['denied'][$assertionKey]->assert($this, $assertionRole, $assertionResource, $permission);
         }
@@ -586,9 +588,9 @@ class Acl
      * @param  mixed $resource
      * @param  mixed $permission
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
-    public function isDeniedMany(array $roles, $resource = null, $permission = null)
+    public function isDeniedMany(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
         if ($this->strict) {
             $result = true;
@@ -619,9 +621,9 @@ class Acl
      * @param  mixed $resource
      * @param  mixed $permission
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
-    public function isDeniedManyStrict(array $roles, $resource = null, $permission = null)
+    public function isDeniedManyStrict(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
         $this->strict = true;
         return $this->isDeniedMany($roles, $resource, $permission);
@@ -634,16 +636,16 @@ class Acl
      * @param  string             $type
      * @param  mixed              $role
      * @param  mixed              $resource
-     * @param  string             $permission
-     * @throws \InvalidArgumentException
+     * @param  ?string            $permission
+     * @throws InvalidArgumentException
      * @return void
      */
-    public function createAssertion(AssertionInterface $assertion, $type, $role, $resource = null, $permission = null)
+    public function createAssertion(AssertionInterface $assertion, string $type, mixed $role, mixed $resource = null, ?string $permission = null): void
     {
         $key = $this->generateAssertionKey($role, $resource, $permission);
 
         if (($type != 'allowed') && ($type != 'denied')) {
-            throw new \InvalidArgumentException("Error: The assertion type must be either 'allowed' or 'denied'.");
+            throw new InvalidArgumentException("Error: The assertion type must be either 'allowed' or 'denied'.");
         }
         $this->assertions[$type][$key] = $assertion;
     }
@@ -651,13 +653,13 @@ class Acl
     /**
      * Delete assertion
      *
-     * @param  string $type
-     * @param  mixed  $role
-     * @param  mixed  $resource
-     * @param  string $permission
+     * @param  string  $type
+     * @param  mixed   $role
+     * @param  mixed   $resource
+     * @param  ?string $permission
      * @return void
      */
-    public function deleteAssertion($type, $role, $resource = null, $permission = null)
+    public function deleteAssertion(string $type, mixed $role, mixed $resource = null, ?string $permission = null): void
     {
         $key = $this->generateAssertionKey($role, $resource, $permission);
 
@@ -669,19 +671,19 @@ class Acl
     /**
      * Has assertion key
      *
-     * @param  string $type
-     * @param  mixed  $role
-     * @param  mixed  $resource
-     * @param  string $permission
-     * @throws \InvalidArgumentException
-     * @return boolean
+     * @param  string  $type
+     * @param  mixed   $role
+     * @param  mixed   $resource
+     * @param  ?string $permission
+     * @throws InvalidArgumentException
+     * @return bool
      */
-    public function hasAssertionKey($type, $role, $resource = null, $permission = null)
+    public function hasAssertionKey(string $type, mixed $role, mixed $resource = null, ?string $permission = null): bool
     {
         $key = $this->generateAssertionKey($role, $resource, $permission);
 
         if (($type != 'allowed') && ($type != 'denied')) {
-            throw new \InvalidArgumentException("Error: The assertion type must be either 'allowed' or 'denied'.");
+            throw new InvalidArgumentException("Error: The assertion type must be either 'allowed' or 'denied'.");
         }
 
         return (isset($this->assertions[$type][$key]));
@@ -690,19 +692,19 @@ class Acl
     /**
      * Get assertion key
      *
-     * @param  string $type
-     * @param  mixed  $role
-     * @param  mixed  $resource
-     * @param  string $permission
-     * @throws \InvalidArgumentException
-     * @return string
+     * @param  string  $type
+     * @param  mixed   $role
+     * @param  mixed   $resource
+     * @param  ?string $permission
+     * @throws InvalidArgumentException
+     * @return string|null
      */
-    public function getAssertionKey($type, $role, $resource = null, $permission = null)
+    public function getAssertionKey(string $type, mixed $role, mixed $resource = null, ?string $permission = null): string|null
     {
         $key = $this->generateAssertionKey($role, $resource, $permission);
 
         if (($type != 'allowed') && ($type != 'denied')) {
-            throw new \InvalidArgumentException("Error: The assertion type must be either 'allowed' or 'denied'.");
+            throw new InvalidArgumentException("Error: The assertion type must be either 'allowed' or 'denied'.");
         }
 
         return (isset($this->assertions[$type][$key])) ? $key : null;
@@ -716,7 +718,7 @@ class Acl
      * @param  mixed  $resource
      * @return Acl
      */
-    public function addPolicy($method, $role, $resource = null)
+    public function addPolicy(string $method, mixed $role, mixed $resource = null): Acl
     {
         $this->policies[] = [
             'method'   => $method,
@@ -730,9 +732,9 @@ class Acl
     /**
      * Has policies
      *
-     * @return boolean
+     * @return bool
      */
-    public function hasPolicies()
+    public function hasPolicies(): bool
     {
         return (count($this->policies) > 0);
     }
@@ -743,13 +745,14 @@ class Acl
      * @param  mixed $role
      * @param  mixed $resource
      * @param  mixed $permission
-     * @return boolean|null
+     * @throws Exception
+     * @return bool|null
      */
-    public function evaluatePolicies($role = null, $resource = null, $permission = null)
+    public function evaluatePolicies(mixed $role = null, mixed $resource = null, mixed $permission = null): bool|null
     {
         $result = null;
 
-        if ((null === $role) && (null === $resource) && (null === $permission)) {
+        if (($role === null) && ($resource === null) && ($permission === null)) {
             foreach ($this->policies as $policy) {
                 $result = $this->evaluatePolicy($policy['method'], $policy['role'], $policy['resource']);
                 if ($result === false) {
@@ -759,21 +762,21 @@ class Acl
         } else {
             $policyRole     = null;
             $policyResource = null;
-            $policyMethod   = (null !== $permission) ? $permission : null;
+            $policyMethod   = ($permission !== null) ? $permission : null;
 
-            if (null !== $role) {
+            if ($role !== null) {
                 $this->verifyRole($role);
                 $policyRole = ($role instanceof AclRole) ? $role->getName() : $role;
             }
-            if (null !== $resource) {
+            if ($resource !== null) {
                 $this->verifyResource($resource);
                 $policyResource = ($resource instanceof AclResource) ? $resource->getName() : $resource;
             }
 
             foreach ($this->policies as $policy) {
-                if (((null === $policyRole) || ($policyRole == $policy['role'])) &&
-                    ((null === $policyResource) || ($policyResource == $policy['resource'])) &&
-                    ((null === $policyMethod) || ($policyMethod == $policy['method']))) {
+                if ((($policyRole === null) || ($policyRole == $policy['role'])) &&
+                    (($policyResource === null) || ($policyResource == $policy['resource'])) &&
+                    (($policyMethod === null) || ($policyMethod == $policy['method']))) {
                     $result = $this->evaluatePolicy($policy['method'], $policy['role'], $policy['resource']);
                     if ($result === false) {
                         return false;
@@ -792,9 +795,9 @@ class Acl
      * @param  mixed  $role
      * @param  mixed  $resource
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
-    public function evaluatePolicy($method, $role, $resource = null)
+    public function evaluatePolicy(string $method, mixed $role, mixed $resource = null): bool
     {
         if (is_string($role) && ($this->verifyRole($role))) {
             $role = $this->roles[(string)$role];
@@ -804,7 +807,7 @@ class Acl
             throw new Exception('Error: The role must use Pop\Acl\Policy\PolicyTrait.');
         }
 
-        if (null !== $resource) {
+        if ($resource !== null) {
             $this->verifyResource($resource);
             $resource = $this->resources[(string)$resource];
         }
@@ -817,9 +820,9 @@ class Acl
      *
      * @param  mixed $role
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
-    protected function verifyRole($role)
+    protected function verifyRole(mixed $role): bool
     {
         if (!is_string($role) && !($role instanceof AclRole)) {
             throw new \InvalidArgumentException('Error: The role must be a string or an instance of Role.');
@@ -836,9 +839,9 @@ class Acl
      *
      * @param  mixed $resource
      * @throws Exception
-     * @return boolean
+     * @return bool
      */
-    protected function verifyResource($resource)
+    protected function verifyResource(mixed $resource): bool
     {
         if (!is_string($resource) && !($resource instanceof AclResource)) {
             throw new \InvalidArgumentException('Error: The resource must be a string or an instance of Resource.');
@@ -853,19 +856,19 @@ class Acl
     /**
      * Generate assertion key
      *
-     * @param  mixed  $role
-     * @param  mixed  $resource
-     * @param  string $permission
+     * @param  mixed   $role
+     * @param  mixed   $resource
+     * @param  ?string $permission
      * @return string
      */
-    protected function generateAssertionKey($role, $resource = null, $permission = null)
+    protected function generateAssertionKey(mixed $role, mixed $resource = null, ?string $permission = null): string
     {
         $key = (string)$role;
 
-        if (null !== $resource) {
+        if ($resource !== null) {
             $key .= '-' . (string)$resource;
         }
-        if (null !== $permission) {
+        if ($permission !== null) {
             $key .= '-' . (string)$permission;
         }
 
@@ -878,7 +881,7 @@ class Acl
      * @param  array $roles
      * @return void
      */
-    protected function traverseChildren(array $roles)
+    protected function traverseChildren(array $roles): void
     {
         foreach ($roles as $role) {
             $this->addRole($role);
