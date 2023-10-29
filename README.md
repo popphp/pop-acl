@@ -336,7 +336,7 @@ class User extends AclRole
 
 It defines specific evaluations that are required for three different actions
 `create()`, `update()` and `delete()`. Then the user role and policy can be added
-to the main Acl object:
+to the main ACL object:
 
 ```php
 $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1002]);
