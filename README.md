@@ -47,7 +47,7 @@ Quickstart
 ----------
 
 The basic concepts involve role and resource objects and then defining what permissions
-are allowed (or disallowed) between them. The main ACL object will determine if
+are allowed (or denied) between them. The main ACL object will determine if
 the requested action by a role on a resource is permitted or not.
 
 ```php
