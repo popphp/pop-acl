@@ -10,6 +10,10 @@ pop-acl
 * [Overview](#overview)
 * [Install](#install)
 * [Quickstart](#quickstart)
+* [Roles](#roles)
+* [Resources](#resources)
+* [Multiple Roles](#multiple-roles)
+  - [Strict](#strict)
 * [Inheritance](#inheritance)
 * [Assertions](#assertions)
 * [Policies](#policies)
@@ -42,6 +46,10 @@ Or, require it in your composer.json file
 Quickstart
 ----------
 
+The basic concepts involve role and resource objects and then defining what permissions
+are allowed (or disallowed) between them. The main ACL object will determine if
+the requested action by a role on a resource is permitted or not.
+
 ```php
 use Pop\Acl\Acl;
 use Pop\Acl\AclRole as Role;
@@ -62,19 +70,114 @@ $acl->allow('admin', 'page')           // Admin can do anything to a page
     ->allow('editor', 'page', 'edit')  // Editor can only edit a page
     ->allow('reader', 'page', 'read'); // Editor can only edit a page
 
-if ($acl->isAllowed('admin', 'page', 'add'))   { } // Returns true
-if ($acl->isAllowed('editor', 'page', 'edit')) { } // Returns true
-if ($acl->isAllowed('editor', 'page', 'add'))  { } // Returns false
-if ($acl->isAllowed('reader', 'page', 'edit')) { } // Returns false
-if ($acl->isAllowed('reader', 'page', 'read')) { } // Returns true
+var_dump($acl->isAllowed($admin, $page, 'add'));   // true
+var_dump($acl->isAllowed($editor, $page, 'edit')); // true
+var_dump($acl->isAllowed($editor, $page, 'add'));  // false
+var_dump($acl->isAllowed($reader, $page, 'edit')); // false
+var_dump($acl->isAllowed($reader, $page, 'read')); // true
+```
+
+The above also works with the string value names of the roles and resources:
+
+```php
+var_dump($acl->isAllowed('admin', 'page', 'add'));   // true
+var_dump($acl->isAllowed('editor', 'page', 'edit')); // true
+var_dump($acl->isAllowed('editor', 'page', 'add'));  // false
+var_dump($acl->isAllowed('reader', 'page', 'edit')); // false
+var_dump($acl->isAllowed('reader', 'page', 'read')); // true
 ```
 
 [Top](#pop-acl)
 
+Roles
+-----
+
+Besides being a store for a role name, a role object serves as a simple data object,
+should additional data need to be stored about the role or the user currently assigned
+to the role.
+
+```php
+use Pop\Acl\AclRole as Role;
+
+$admin = new Role('admin');
+
+$admin->id      = 1; // Define the role ID
+$admin->user_id = 2; // Define the current user ID
+```
+
+This is useful for deeper evaluations like [assertions](#assertions) and [policies](#policies).
+
+[Top](#pop-acl)
+
+Resources
+---------
+
+Like roles, the resource object serves as a simple data object to store additional data that
+may be needed.
+
+```php
+use Pop\Acl\AclResource as Resource;
+
+$page = new Resource('page');
+
+$page->id      = 1; // Define the role ID
+$page->user_id = 2; // Define the page owner user ID
+```
+
+This is useful for deeper evaluations like [assertions](#assertions) and [policies](#policies).
+
+[Top](#pop-acl)
+
+Multiple Roles
+--------------
+
+If a user is assigned multiple roles at one time, those roles can all be evaluated at the same time.
+If we wire up a similar example from above: 
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl = new Acl();
+
+$admin  = new Role('admin');
+$editor = new Role('editor');
+$page   = new Resource('page');
+
+$acl->addRoles([$admin, $editor])
+    ->addResource($page);
+
+$acl->allow('admin', 'page')           // Admin can do anything to a page
+    ->allow('editor', 'page', 'edit')  // Editor can only edit a page
+```
+
+we can then call the `isAllowedMany()` method to evaluate multiple roles at once:
+
+```php
+var_dump($acl->isAllowedMany([$admin, $editor], $page, 'add'));  // true
+var_dump($acl->isAllowedMany([$admin, $editor], $page, 'edit')); // true
+```
+
+If one of the roles is permitted to perform the requested action on the resource, it will
+pass as `true`.
+
+### Strict
+
+When evaluating multiple roles at once, if the requirement is such that all roles must be permitted
+to perform the requested action on the resource, using the `strict` flag will ensure that.
+
+```php
+$acl->setStrict(true);
+
+// Returns false because the editor isn't allowed to add pages
+var_dump($acl->isAllowedMany([$admin, $editor], $page, 'add')); // false 
+```
+
 Inheritance
 -----------
 
-You can have roles inherit access rules as well.
+Roles can be constructed to inherit rules from other roles.
 
 ```php
 use Pop\Acl\Acl;
@@ -108,12 +211,12 @@ $acl->allow('editor', 'page', 'read');
 // Over-riding deny rule so that a reader cannot edit a page
 $acl->deny('reader', 'page', 'edit');
 
-if ($acl->isAllowed('editor', 'page', 'add'))  { } // Returns false
-if ($acl->isAllowed('reader', 'page', 'add'))  { } // Returns false
-if ($acl->isAllowed('editor', 'page', 'edit')) { } // Returns true
-if ($acl->isAllowed('reader', 'page', 'edit')) { } // Returns false
-if ($acl->isAllowed('editor', 'page', 'read')) { } // Returns true
-if ($acl->isAllowed('reader', 'page', 'read')) { } // Returns true
+var_dump($acl->isAllowed('editor', 'page', 'add'));  // false
+var_dump($acl->isAllowed('reader', 'page', 'add'));  // false
+var_dump($acl->isAllowed('editor', 'page', 'edit')); // true
+var_dump($acl->isAllowed('reader', 'page', 'edit')); // false
+var_dump($acl->isAllowed('editor', 'page', 'read')); // true
+var_dump($acl->isAllowed('reader', 'page', 'read')); // true
 ```
 
 [Top](#pop-acl)
@@ -140,13 +243,14 @@ class UserCanEditPage implements AssertionInterface
         $permission = null
     )
     {
-        return ((null !== $resource) && ($role->id == $resource->user_id));
+        // Check that the resource owner (user_id) is the same as the current role user (user_id)
+        return ((null !== $resource) && ($resource->user_id == $role->user_id));
     }
 
 }
 ```
 
-Then, within the application, you can use the assertions like this:
+Then, within the application, you can use assertions like this:
 
 ```php
 use Pop\Acl\Acl;
@@ -167,6 +271,7 @@ $page->user_id = 1001;
 $acl->addRoles([$admin, $editor]);
 $acl->addResource($page);
 
+// Define the assertion(s) to use in the 4th parameter of the allow/deny method
 $acl->allow('admin', 'page', 'add')
     ->allow('admin', 'page', 'edit', new UserCanEditPage())
     ->allow('editor', 'page', 'edit', new UserCanEditPage())
@@ -190,59 +295,9 @@ An alternate way to achieve even more specific fine-grain control is to use poli
 Similar to assertions, you have to write the policy class and it needs to use the
 `Pop\Acl\Policy\PolicyTrait`. Unlike assertions that are centered around the single
 `assert()` method, policies allow you to write separate methods that will be called and
-evaluated via the `can()` method in the `PolicyTrait`. Consider the following simple
+evaluated via the `can()` method in the `PolicyTrait`. Consider the following example
 policy class:
 
-```php
-use Pop\Acl\AclResource;
-
-class User
-{
-
-    use Pop\Acl\Policy\PolicyTrait;
-
-    public $id      = null;
-    public $isAdmin = null;
-
-    public function __construct($id, $isAdmin)
-    {
-        $this->id      = (int)$id;
-        $this->isAdmin = (bool)$isAdmin;
-    }
-
-    public function create(User $user, AclResource $page)
-    {
-        return (($user->isAdmin) && ($page->getName() == 'page'));
-    }
-
-    public function update(User $user, AclResource $page)
-    {
-        return ($user->id === $page->user_id);
-    }
-
-    public function delete(User $user, AclResource $page)
-    {
-        return (($user->isAdmin) || ($user->id === $page->user_id));
-    }
-
-}
-```
-
-The above policy class can enforce whether or not a user can create, update or delete a page resource.
-
-```php
-$page   = new AclResource('page', ['id' => 2001, 'user_id' => 1002]);
-$admin  = new User(1001, true);
-$editor = new User(1002, false);
-
-var_dump($admin->can('create', $page));   // Returns true, because the user is an admin
-var_dump($editor->can('create', $page));  // Returns false, because the user is an editor (not an admin)
-var_dump($admin->can('update', $page));   // Returns false, because the admin doesn't "own" the page
-var_dump($editor->can('update', $page));  // Returns true, because the editor does "own" the page
-```
-
-For a more advanced example, the policy class can be a role class, which extends the `Pop\Acl\AclRole`
-class. This allows the main Acl object to evaluate any policies added to it.
 
 ```php
 use Pop\Acl\Acl;
@@ -277,7 +332,9 @@ class User extends AclRole
 }
 ```
 
-Then the user role and policy can be added to the main Acl object:
+It defines specific evaluations that are required for three different actions
+`create()`, `update()` and `delete()`. Then the user role and policy can be added
+to the main Acl object:
 
 ```php
 $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1002]);
@@ -287,28 +344,14 @@ $editor = new User('editor', 1002, false);
 $acl = new Acl();
 $acl->addRoles([$admin, $editor]);
 $acl->addResource($page);
-$acl->addPolicy('create', 'admin', 'page');
-$acl->addPolicy('create', 'editor', 'page');
-$acl->addPolicy('update', 'admin', 'page');
-$acl->addPolicy('update', 'editor', 'page');
-
-// Returns true, because the user is an admin
-var_dump($acl->evaluatePolicy('create', 'admin', 'page'));  
-
-// Returns false, because the user is an editor (not an admin)
-var_dump($acl->evaluatePolicy('create', 'editor', 'page')); 
-
-// Returns false, because the admin doesn't "own" the page
-var_dump($acl->evaluatePolicy('update', 'admin', 'page'));  
-
-// Returns true, because the editor does "own" the page
-var_dump($acl->evaluatePolicy('update', 'editor', 'page')); 
+$acl->addPolicy('create', $admin, $page);
+$acl->addPolicy('create', $editor, $page);
+$acl->addPolicy('update', $admin, $page);
+$acl->addPolicy('update', $editor, $page);
 ```
 
-The above example demonstrates a direct evaluation of policies by calling the `evaluatePolicy()` method. However,
-if the Acl object has policies added to it, they will be evaluated when the `isAllowed()` and `isDenied()`
-methods are called, based on the role and resource being passed into those methods. Using the same set up as
-above, you can call the following and it will behave similarly as above:
+Once the polices are added to the ACL object, they will be automatically evaluated on the
+`isAllowed()` or `isDenied()` method calls:
 
 ```php
 // Returns true, because the user is an admin
@@ -322,6 +365,33 @@ var_dump($acl->isAllowed('admin', 'page', 'update'));
 
 // Returns true, because the editor does "own" the page
 var_dump($acl->isAllowed('editor', 'page', 'update')); 
+```
+
+A deeper look into what is happening under the hood, the ACL object is calling the method
+`evaluatePolicy()` to determine if the requested action is allowed:
+
+```php
+// Returns true, because the user is an admin
+var_dump($acl->evaluatePolicy('create', 'admin', 'page'));  
+
+// Returns false, because the user is an editor (not an admin)
+var_dump($acl->evaluatePolicy('create', 'editor', 'page')); 
+
+// Returns false, because the admin doesn't "own" the page
+var_dump($acl->evaluatePolicy('update', 'admin', 'page'));  
+
+// Returns true, because the editor does "own" the page
+var_dump($acl->evaluatePolicy('update', 'editor', 'page')); 
+``````
+
+Which, in turn, the `evaluatePolicy()` method calls are calling the `can()` method on the
+actual policy objects themselves:
+
+```php
+var_dump($admin->can('create', $page));  // true, because the user is an admin
+var_dump($editor->can('create', $page)); // false, because the user is an editor (not an admin)
+var_dump($admin->can('update', $page));  // false, because the admin doesn't "own" the page
+var_dump($editor->can('update', $page)); // true, because the editor does "own" the page
 ```
 
 [Top](#pop-acl)
