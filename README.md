@@ -171,7 +171,7 @@ to perform the requested action on the resource, using the `strict` flag will en
 $acl->setStrict(true);
 
 // Returns false because the editor isn't allowed to add pages
-var_dump($acl->isAllowedMany([$admin, $editor], $page, 'add')); // false 
+var_dump($acl->isAllowedMany([$admin, $editor], $page, 'add'));
 ```
 
 [Top](#pop-acl)
