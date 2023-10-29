@@ -174,6 +174,8 @@ $acl->setStrict(true);
 var_dump($acl->isAllowedMany([$admin, $editor], $page, 'add')); // false 
 ```
 
+[Top](#pop-acl)
+
 Inheritance
 -----------
 
