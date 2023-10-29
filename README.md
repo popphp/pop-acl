@@ -4,15 +4,27 @@ pop-acl
 [![Build Status](https://github.com/popphp/pop-acl/workflows/phpunit/badge.svg)](https://github.com/popphp/pop-acl/actions)
 [![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-acl)](http://cc.popphp.org/pop-acl/)
 
-OVERVIEW
+[![Join the chat at https://popphp.slack.com](https://media.popphp.org/img/slack.svg)](https://popphp.slack.com)
+[![Join the chat at https://discord.gg/D9JBxPa5](https://media.popphp.org/img/discord.svg)](https://discord.gg/D9JBxPa5)
+
+* [Overview](#overview)
+* [Install](#install)
+* [Quickstart](#quickstart)
+* [Inheritance](#inheritance)
+* [Assertions](#assertions)
+* [Policies](#policies)
+
+Overview
 --------
-`pop-acl` is a full-featured "hybrid" between the standard ACL and RBAC user access concepts.
+`pop-acl` is a full-featured component that supports ACL/RBAC user access concepts.
 Beyond allowing or denying basic user access, it provides support for roles, resources,
 permissions as well as assertions and policies for fine-grain access-control.
 
 `pop-acl` is a component of the [Pop PHP Framework](http://www.popphp.org/).
 
-INSTALL
+[Top](#pop-acl)
+
+Install
 -------
 
 Install `pop-acl` using Composer.
@@ -25,8 +37,10 @@ Or, require it in your composer.json file
         "popphp/pop-acl" : "^4.0.0"
     }
 
-BASIC USAGE
------------
+[Top](#pop-acl)
+
+Quickstart
+----------
 
 ```php
 use Pop\Acl\Acl;
@@ -55,8 +69,10 @@ if ($acl->isAllowed('reader', 'page', 'edit')) { } // Returns false
 if ($acl->isAllowed('reader', 'page', 'read')) { } // Returns true
 ```
 
-ROLE INHERITANCE
-----------------
+[Top](#pop-acl)
+
+Inheritance
+-----------
 
 You can have roles inherit access rules as well.
 
@@ -100,8 +116,10 @@ if ($acl->isAllowed('editor', 'page', 'read')) { } // Returns true
 if ($acl->isAllowed('reader', 'page', 'read')) { } // Returns true
 ```
 
-USING ASSERTIONS
-----------------
+[Top](#pop-acl)
+
+Assertions
+----------
 
 If you want more fine-grain control over permissions and who is allowed to do what, you can use assertions.
 First, define the assertion class, which implements the `Pop\Acl\Assertion\AssertionInterface`. In this example,
@@ -163,8 +181,10 @@ if ($acl->isAllowed('admin', 'page', 'edit')) { }
 if ($acl->isAllowed('editor', 'page', 'edit')) { }
 ```
 
-USING POLICIES
---------------
+[Top](#pop-acl)
+
+Policies
+--------
 
 An alternate way to achieve even more specific fine-grain control is to use policies.
 Similar to assertions, you have to write the policy class and it needs to use the
@@ -206,7 +226,6 @@ class User
     }
 
 }
-
 ```
 
 The above policy class can enforce whether or not a user can create, update or delete a page resource.
@@ -220,7 +239,6 @@ var_dump($admin->can('create', $page));   // Returns true, because the user is a
 var_dump($editor->can('create', $page));  // Returns false, because the user is an editor (not an admin)
 var_dump($admin->can('update', $page));   // Returns false, because the admin doesn't "own" the page
 var_dump($editor->can('update', $page));  // Returns true, because the editor does "own" the page
-
 ```
 
 For a more advanced example, the policy class can be a role class, which extends the `Pop\Acl\AclRole`
@@ -257,7 +275,6 @@ class User extends AclRole
     }
 
 }
-
 ```
 
 Then the user role and policy can be added to the main Acl object:
@@ -286,7 +303,6 @@ var_dump($acl->evaluatePolicy('update', 'admin', 'page'));
 
 // Returns true, because the editor does "own" the page
 var_dump($acl->evaluatePolicy('update', 'editor', 'page')); 
-
 ```
 
 The above example demonstrates a direct evaluation of policies by calling the `evaluatePolicy()` method. However,
@@ -306,7 +322,6 @@ var_dump($acl->isAllowed('admin', 'page', 'update'));
 
 // Returns true, because the editor does "own" the page
 var_dump($acl->isAllowed('editor', 'page', 'update')); 
-
 ```
 
-    
+[Top](#pop-acl)
