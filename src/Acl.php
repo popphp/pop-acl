@@ -795,9 +795,9 @@ class Acl
      * @param  mixed  $role
      * @param  mixed  $resource
      * @throws Exception
-     * @return bool
+     * @return bool|null
      */
-    public function evaluatePolicy(string $method, mixed $role, mixed $resource = null): bool
+    public function evaluatePolicy(string $method, mixed $role, mixed $resource = null): bool|null
     {
         if (is_string($role) && ($this->verifyRole($role))) {
             $role = $this->roles[(string)$role];
