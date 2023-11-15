@@ -68,7 +68,7 @@ $acl->addResource($page);
 
 $acl->allow('admin', 'page')           // Admin can do anything to a page
     ->allow('editor', 'page', 'edit')  // Editor can only edit a page
-    ->allow('reader', 'page', 'read'); // Editor can only edit a page
+    ->allow('reader', 'page', 'read'); // Reader can only read a page
 
 var_dump($acl->isAllowed($admin, $page, 'add'));   // true
 var_dump($acl->isAllowed($editor, $page, 'edit')); // true

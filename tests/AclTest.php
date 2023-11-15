@@ -129,7 +129,7 @@ class AclTest extends TestCase
         $this->assertFalse($acl->isAllowed('reader', 'page', 'edit'));
     }
 
-    public function testIsAllowedMany()
+    public function testIsAllowedMany1()
     {
         $acl = new Acl();
 
@@ -153,6 +153,32 @@ class AclTest extends TestCase
         ];
 
         $this->assertTrue($acl->isAllowedMany($user->roles, 'page', 'create'));
+    }
+
+    public function testIsAllowedMany2()
+    {
+        $acl = new Acl();
+
+        $admin  = new AclRole('admin');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+
+        $page = new AclResource('page');
+
+        $acl->addRoles([$admin, $editor, $reader]);
+        $acl->addResource($page);
+
+        $acl->allow('admin', 'page', 'create')
+            ->deny('editor', 'page', 'create')
+            ->allow('reader', 'page', 'read');
+
+        $user = new \stdClass();
+        $user->roles = [
+            1 => 'admin',
+            2 => 'editor'
+        ];
+
+        $this->assertFalse($acl->isAllowedMany($user->roles, 'page', 'create'));
     }
 
     public function testIsAllowedManyStrict()
@@ -207,7 +233,33 @@ class AclTest extends TestCase
         $this->assertTrue($acl->isDeniedMany($user->roles, 'page', 'create'));
     }
 
-    public function testIsDeniedManyStrict()
+    public function testIsDeniedManyStrict1()
+    {
+        $acl = new Acl();
+
+        $admin  = new AclRole('admin');
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+
+        $page = new AclResource('page');
+
+        $acl->addRoles([$admin, $editor, $reader]);
+        $acl->addResource($page);
+
+        $acl->deny('admin', 'page', 'create')
+            ->deny('editor', 'page', 'create')
+            ->deny('reader', 'page', 'read');
+
+        $user = new \stdClass();
+        $user->roles = [
+            1 => 'admin',
+            2 => 'editor'
+        ];
+
+        $this->assertTrue($acl->isDeniedManyStrict($user->roles, 'page', 'create'));
+    }
+
+    public function testIsDeniedManyStrict2()
     {
         $acl = new Acl();
 

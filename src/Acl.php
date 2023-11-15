@@ -481,6 +481,7 @@ class Acl
      */
     public function isAllowedMany(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
+        // If strict, all roles must be allowed
         if ($this->strict) {
             $result = true;
             foreach ($roles as $role) {
@@ -489,7 +490,16 @@ class Acl
                     break;
                 }
             }
+        // Else, evaluate loosely
         } else {
+            // Check for any explicitly set denied rules for any of the roles
+            foreach ($roles as $role) {
+                if ($this->isDenied($role, $resource, $permission)) {
+                    return false;
+                }
+            }
+
+            // Else, evaluate if any of the roles are allowed
             $result = false;
             foreach ($roles as $role) {
                 if ($this->isAllowed($role, $resource, $permission)) {
@@ -592,6 +602,7 @@ class Acl
      */
     public function isDeniedMany(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
+        // If strict, all roles must be denied
         if ($this->strict) {
             $result = true;
             foreach ($roles as $role) {
@@ -600,7 +611,9 @@ class Acl
                     break;
                 }
             }
+        // Else, evaluate loosely
         } else {
+            // Else, evaluate if any of the roles are denied
             $result = false;
             foreach ($roles as $role) {
                 if ($this->isDenied($role, $resource, $permission)) {
