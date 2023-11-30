@@ -12,8 +12,9 @@ pop-acl
 * [Quickstart](#quickstart)
 * [Roles](#roles)
 * [Resources](#resources)
+* [Strict](#strict)
 * [Multiple Roles](#multiple-roles)
-  - [Strict](#strict)
+  - [Multi-Strict](#multi-strict)
 * [Inheritance](#inheritance)
 * [Assertions](#assertions)
 * [Policies](#policies)
@@ -125,6 +126,89 @@ $page->user_id = 2; // Define the page owner user ID
 ```
 
 This is useful for deeper evaluations like [assertions](#assertions) and [policies](#policies).
+
+
+[Top](#pop-acl)
+
+Strict
+------
+
+Setting the `strict` flag strictly enforces any permissions that have been set and requires
+permissions to be explicit set. If the `strict` flag is set to false, then ACL checks may pass
+as `true` is a rule is not explicitly set. Consider the following example:
+
+**Non-Strict**
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl = new Acl();
+
+$admin  = new Role('admin');
+$editor = new Role('editor');
+$page   = new Resource('page');
+
+$acl->addRoles([$admin, $editor]);
+$acl->addResource($page);
+
+$acl->allow($admin, $page)           // Admin can do anything to a page
+    ->allow($editor, $page, 'edit'); // Editor can edit a page
+
+var_dump($acl->isAllowed($admin, $page, 'add'));  // bool(true)
+var_dump($acl->isAllowed($editor, $page, 'add')); // bool(true)
+```
+
+Both result in `true`, as there is no explicit rule preventing the editor from adding a page.
+In order to prevent the editor from adding a page, you would either have to set a deny rule:
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl = new Acl();
+
+$admin  = new Role('admin');
+$editor = new Role('editor');
+$page   = new Resource('page');
+
+$acl->addRoles([$admin, $editor]);
+$acl->addResource($page);
+
+$acl->allow($admin, $page)           // Admin can do anything to a page
+    ->allow($editor, $page, 'edit'); // Editor can edit a page
+
+$acl->deny($editor, $page, 'add');
+
+var_dump($acl->isAllowed($admin, $page, 'add'));  // bool(true)
+var_dump($acl->isAllowed($editor, $page, 'add')); // bool(false)
+```
+
+Or, set the ACL to strict:
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl = new Acl();
+$acl->setStrict();
+
+$admin  = new Role('admin');
+$editor = new Role('editor');
+$page   = new Resource('page');
+
+$acl->addRoles([$admin, $editor]);
+$acl->addResource($page);
+
+$acl->allow($admin, $page)           // Admin can do anything to a page
+    ->allow($editor, $page, 'edit'); // Editor can edit a page
+
+var_dump($acl->isAllowed($admin, $page, 'add'));  // bool(true)
+var_dump($acl->isAllowed($editor, $page, 'add')); // bool(false)
+```
 
 [Top](#pop-acl)
 
