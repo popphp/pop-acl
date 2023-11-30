@@ -134,7 +134,7 @@ Strict
 ------
 
 Setting the `strict` flag strictly enforces any permissions that have been set and requires
-permissions to be explicit set. If the `strict` flag is set to false, then ACL checks may pass
+permissions to be explicitly set. If the `strict` flag is set to `false`, then ACL checks may pass
 as `true` is a rule is not explicitly set. Consider the following example:
 
 **Non-Strict**
