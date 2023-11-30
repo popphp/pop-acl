@@ -152,11 +152,11 @@ $acl->allow('admin', 'page')           // Admin can do anything to a page
     ->allow('editor', 'page', 'edit')  // Editor can only edit a page
 ```
 
-we can then call the `isAllowedMany()` method to evaluate multiple roles at once:
+we can then call the `isAllowedMulti()` method to evaluate multiple roles at once:
 
 ```php
-var_dump($acl->isAllowedMany([$admin, $editor], $page, 'add'));  // true
-var_dump($acl->isAllowedMany([$admin, $editor], $page, 'edit')); // true
+var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'add'));  // true
+var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'edit')); // true
 ```
 
 If one of the roles is permitted to perform the requested action on the resource, it will
@@ -171,7 +171,7 @@ to perform the requested action on the resource, using the `strict` flag will en
 $acl->setStrict(true);
 
 // Returns false because the editor isn't allowed to add pages
-var_dump($acl->isAllowedMany([$admin, $editor], $page, 'add'));
+var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'add'));
 ```
 
 [Top](#pop-acl)
