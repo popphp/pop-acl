@@ -28,8 +28,18 @@ class AclTest extends TestCase
         $acl = new Acl();
         $acl->setStrict();
         $this->assertTrue($acl->isStrict());
-        $acl->setStrict(false);
+        $acl->setStrict(false, true);
         $this->assertFalse($acl->isStrict());
+        $this->assertTrue($acl->isMultiStrict());
+    }
+
+    public function testSetMultiStrict()
+    {
+        $acl = new Acl();
+        $acl->setMultiStrict();
+        $this->assertTrue($acl->isMultiStrict());
+        $acl->setMultiStrict(false);
+        $this->assertFalse($acl->isMultiStrict());
     }
 
     public function testAddRole()
@@ -129,7 +139,7 @@ class AclTest extends TestCase
         $this->assertFalse($acl->isAllowed('reader', 'page', 'edit'));
     }
 
-    public function testIsAllowedMany1()
+    public function testIsAllowedMulti1()
     {
         $acl = new Acl();
 
@@ -152,10 +162,10 @@ class AclTest extends TestCase
             2 => 'editor'
         ];
 
-        $this->assertTrue($acl->isAllowedMany($user->roles, 'page', 'create'));
+        $this->assertTrue($acl->isAllowedMulti($user->roles, 'page', 'create'));
     }
 
-    public function testIsAllowedMany2()
+    public function testIsAllowedMulti2()
     {
         $acl = new Acl();
 
@@ -178,10 +188,10 @@ class AclTest extends TestCase
             2 => 'editor'
         ];
 
-        $this->assertFalse($acl->isAllowedMany($user->roles, 'page', 'create'));
+        $this->assertFalse($acl->isAllowedMulti($user->roles, 'page', 'create'));
     }
 
-    public function testIsAllowedManyStrict()
+    public function testIsAllowedMultiStrict()
     {
         $acl = new Acl();
 
@@ -204,10 +214,10 @@ class AclTest extends TestCase
             2 => 'editor'
         ];
 
-        $this->assertFalse($acl->isAllowedManyStrict($user->roles, 'page', 'create'));
+        $this->assertFalse($acl->isAllowedMultiStrict($user->roles, 'page', 'create'));
     }
 
-    public function testIsDeniedMany()
+    public function testIsDeniedMulti()
     {
         $acl = new Acl();
 
@@ -230,10 +240,10 @@ class AclTest extends TestCase
             2 => 'editor'
         ];
 
-        $this->assertTrue($acl->isDeniedMany($user->roles, 'page', 'create'));
+        $this->assertTrue($acl->isDeniedMulti($user->roles, 'page', 'create'));
     }
 
-    public function testIsDeniedManyStrict1()
+    public function testIsDeniedMultiStrict1()
     {
         $acl = new Acl();
 
@@ -256,10 +266,10 @@ class AclTest extends TestCase
             2 => 'editor'
         ];
 
-        $this->assertTrue($acl->isDeniedManyStrict($user->roles, 'page', 'create'));
+        $this->assertTrue($acl->isDeniedMultiStrict($user->roles, 'page', 'create'));
     }
 
-    public function testIsDeniedManyStrict2()
+    public function testIsDeniedMultiStrict2()
     {
         $acl = new Acl();
 
@@ -282,7 +292,7 @@ class AclTest extends TestCase
             2 => 'editor'
         ];
 
-        $this->assertFalse($acl->isDeniedManyStrict($user->roles, 'page', 'create'));
+        $this->assertFalse($acl->isDeniedMultiStrict($user->roles, 'page', 'create'));
     }
 
     public function testIsAllowedWithAssertionNoPermission()

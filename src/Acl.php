@@ -75,6 +75,12 @@ class Acl
     protected bool $strict = false;
 
     /**
+     * Multi strict flag
+     * @var bool
+     */
+    protected bool $multiStrict = false;
+
+    /**
      * Constructor
      *
      * Instantiate the ACL object
@@ -234,12 +240,16 @@ class Acl
     /**
      * Set strict
      *
-     * @param  bool $strict
+     * @param  bool      $strict
+     * @param  bool|null $multiStrict
      * @return Acl
      */
-    public function setStrict(bool $strict = true): Acl
+    public function setStrict(bool $strict = true, bool|null $multiStrict = null): Acl
     {
         $this->strict = $strict;
+        if ($multiStrict !== null) {
+            $this->multiStrict = $multiStrict;
+        }
         return $this;
     }
 
@@ -248,13 +258,35 @@ class Acl
      *
      * @return bool
      */
-    public function isStrict()
+    public function isStrict(): bool
     {
         return $this->strict;
     }
 
     /**
-     * Allow a user role permission to a resource or resources
+     * Set multi strict
+     *
+     * @param  bool $multiStrict
+     * @return Acl
+     */
+    public function setMultiStrict(bool $multiStrict = true): Acl
+    {
+        $this->multiStrict = $multiStrict;
+        return $this;
+    }
+
+    /**
+     * See if ACL object is set to multi strict
+     *
+     * @return bool
+     */
+    public function isMultiStrict(): bool
+    {
+        return $this->multiStrict;
+    }
+
+    /**
+     * Allow a role permission to a resource or resources
      *
      * @param  mixed               $role
      * @param  mixed               $resource
@@ -327,7 +359,7 @@ class Acl
     }
 
     /**
-     * Deny a user role permission to a resource or resources
+     * Deny a role permission to a resource or resources
      *
      * @param  mixed               $role
      * @param  mixed               $resource
@@ -400,7 +432,7 @@ class Acl
     }
 
     /**
-     * Determine if the user is allowed
+     * Determine if the role is allowed
      *
      * @param  mixed $role
      * @param  mixed $resource
@@ -420,7 +452,7 @@ class Acl
             // If is not denied
             if (!$this->isDenied($role, $resource, $permission)) {
                 // If not strict, pass
-                if (!$this->strict) {
+                if ((!$this->strict) && (!$this->multiStrict)) {
                     $result = true;
                 // If strict, check for explicit allow rule
                 } else {
@@ -470,8 +502,7 @@ class Acl
     }
 
     /**
-     * Determine if a user that is assigned many roles is allowed
-     * If one of the roles is allowed, then the user will be allowed (return true)
+     * Determine if multiple roles are allowed
      *
      * @param  array $roles
      * @param  mixed $resource
@@ -479,10 +510,10 @@ class Acl
      * @throws Exception
      * @return bool
      */
-    public function isAllowedMany(array $roles, mixed $resource = null, mixed $permission = null): bool
+    public function isAllowedMulti(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
         // If strict, all roles must be allowed
-        if ($this->strict) {
+        if ($this->multiStrict) {
             $result = true;
             foreach ($roles as $role) {
                 if (!$this->isAllowed($role, $resource, $permission)) {
@@ -513,8 +544,8 @@ class Acl
     }
 
     /**
-     * Determine if a user that is assigned many roles is allowed
-     * All of the roles must be allowed to allow the user (return true)
+     * Determine if multiple roles are allowed using the strict parameter
+     * All of the roles must be allowed to return true, otherwise it will return false
      *
      * @param  array $roles
      * @param  mixed $resource
@@ -522,14 +553,14 @@ class Acl
      * @throws Exception
      * @return bool
      */
-    public function isAllowedManyStrict(array $roles, mixed $resource = null, mixed $permission = null): bool
+    public function isAllowedMultiStrict(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
-        $this->strict = true;
-        return $this->isAllowedMany($roles, $resource, $permission);
+        $this->multiStrict = true;
+        return $this->isAllowedMulti($roles, $resource, $permission);
     }
 
     /**
-     * Determine if the user is denied
+     * Determine if a role is denied
      *
      * @param  mixed $role
      * @param  mixed $resource
@@ -591,8 +622,7 @@ class Acl
     }
 
     /**
-     * Determine if a user that is assigned many roles is denied
-     * If one of the roles is denied, then the user will be denied (return true)
+     * Determine if multiple roles are denied
      *
      * @param  array $roles
      * @param  mixed $resource
@@ -600,10 +630,10 @@ class Acl
      * @throws Exception
      * @return bool
      */
-    public function isDeniedMany(array $roles, mixed $resource = null, mixed $permission = null): bool
+    public function isDeniedMulti(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
         // If strict, all roles must be denied
-        if ($this->strict) {
+        if ($this->multiStrict) {
             $result = true;
             foreach ($roles as $role) {
                 if (!$this->isDenied($role, $resource, $permission)) {
@@ -627,19 +657,19 @@ class Acl
     }
 
     /**
-     * Determine if a user that is assigned many roles is denied
-     * All of the roles must be denied to deny the user (return true)
+     * Determine if multiple roles are denied using the strict parameter
+     *  All of the roles must be denied to return true, otherwise it will return false
      *
      * @param  array $roles
      * @param  mixed $resource
      * @param  mixed $permission
-     * @throws Exception
      * @return bool
+     *@throws Exception
      */
-    public function isDeniedManyStrict(array $roles, mixed $resource = null, mixed $permission = null): bool
+    public function isDeniedMultiStrict(array $roles, mixed $resource = null, mixed $permission = null): bool
     {
-        $this->strict = true;
-        return $this->isDeniedMany($roles, $resource, $permission);
+        $this->multiStrict = true;
+        return $this->isDeniedMulti($roles, $resource, $permission);
     }
 
     /**
