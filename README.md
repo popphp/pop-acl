@@ -158,7 +158,7 @@ var_dump($acl->isAllowed($admin, $page, 'add'));  // bool(true)
 var_dump($acl->isAllowed($editor, $page, 'add')); // bool(true)
 ```
 
-Both result in `true`, as there is no explicit rule preventing the editor from adding a page.
+Both evaluations result in `true`, as there is no explicit rule preventing the editor from adding a page.
 In order to prevent the editor from adding a page, you would either have to set a deny rule:
 
 ```php
@@ -244,16 +244,16 @@ var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'edit')); // true
 If one of the roles is permitted to perform the requested action on the resource, it will
 pass as `true`.
 
-### Strict
+### Multi-Strict
 
 When evaluating multiple roles at once, if the requirement is such that all roles must be permitted
-to perform the requested action on the resource, using the `strict` flag will ensure that.
+to perform the requested action on the resource, using the `multi-strict` flag will ensure that.
 
 ```php
-$acl->setStrict(true);
+$acl->setMultiStrict(true);
 
-// Returns false because the editor isn't allowed to add pages
-var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'add'));
+var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'add'));  // false
+var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'edit')); // true
 ```
 
 [Top](#pop-acl)
