@@ -1,0 +1,35 @@
+Parent:    1
+---------------
+Child:     null  => Pass
+
+Parent:    1
+---------------
+Child:     0     => Fail
+
+Parent:    1
+---------------
+Child:     1     => Pass
+
+Parent:    0
+---------------
+Child:     null  => Fail
+
+Parent:    0
+---------------
+Child:     1     => Pass
+
+Parent:    0
+---------------
+Child:     0     => Fail
+
+Parent:    null
+---------------
+Child:     null  => Pass in NON-STRICT; Fail in STRICT;
+
+Parent:    null
+---------------
+Child:     0     => Fail
+
+Parent:    null
+---------------
+Child:     1     => Pass
