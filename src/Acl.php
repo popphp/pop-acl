@@ -81,6 +81,12 @@ class Acl
     protected bool $multiStrict = false;
 
     /**
+     * Parent strict flag
+     * @var bool
+     */
+    protected bool $parentStrict = false;
+
+    /**
      * Constructor
      *
      * Instantiate the ACL object
@@ -286,6 +292,28 @@ class Acl
     }
 
     /**
+     * Set parent strict
+     *
+     * @param  bool $parentStrict
+     * @return Acl
+     */
+    public function setParentStrict(bool $parentStrict = true): Acl
+    {
+        $this->parentStrict = $parentStrict;
+        return $this;
+    }
+
+    /**
+     * See if ACL object is set to parent strict
+     *
+     * @return bool
+     */
+    public function isParentStrict(): bool
+    {
+        return $this->parentStrict;
+    }
+
+    /**
      * Allow a role permission to a resource or resources
      *
      * @param  mixed               $role
@@ -383,7 +411,9 @@ class Acl
      * @throws Exception
      * @return Acl
      */
-    public function deny(mixed $role, mixed $resource = null, mixed $permission = null, ?AssertionInterface $assertion = null): Acl
+    public function deny(
+        mixed $role, mixed $resource = null, mixed $permission = null, ?AssertionInterface $assertion = null
+    ): Acl
     {
         if ($this->verifyRole($role)) {
             $role = $this->roles[(string)$role];
@@ -470,7 +500,8 @@ class Acl
      */
     public function isAllowed(mixed $role, mixed $resource = null, mixed $permission = null): bool
     {
-        $result = false;
+        $result   = false;
+        $isParent = false;
 
         if ($this->verifyRole($role)) {
             if ($resource !== null) {
@@ -490,23 +521,26 @@ class Acl
                             // No explicit resources or permissions
                             if (count($this->allowed[(string)$roleToCheck]) == 0) {
                                 $result = true;
-                                // Resource set, but no explicit permissions
+                            // Resource set, but no explicit permissions
                             } else if (($resource !== null) && isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
                                 (count($this->allowed[(string)$roleToCheck][(string)$resource]) == 0)) {
                                 $result = true;
-                                // Else, has resource and permissions set
+                            // Else, has resource and permissions set
                             } else if (($resource !== null) && ($permission !== null) &&
                                 isset($this->allowed[(string)$roleToCheck][(string)$resource]) &&
                                 (count($this->allowed[(string)$roleToCheck][(string)$resource]) > 0)) {
-                                $permissions        = (!is_array($permission)) ? [$permission] : $permission;
-                                $allowedPermissions = array_intersect(
-                                    $permissions, $this->allowed[(string)$roleToCheck][(string)$resource]
-                                );
+                                $permissionsToCheck = (!is_array($permission)) ? [$permission] : $permission;
+                                $allowedPermissions = $this->allowed[(string)$roleToCheck][(string)$resource];
+                                $permissions        = array_intersect($permissionsToCheck, $allowedPermissions);
 
-                                $result = (count($allowedPermissions) == count($permissions));
+                                $result = ((($isParent) && (!$this->parentStrict)) ||
+                                    (count($permissions) == count($permissionsToCheck)));
                             }
                         }
+
+                        // Traverse up through the parent roles
                         $roleToCheck = $roleToCheck->getParent();
+                        $isParent    = true;
                     }
                 }
             }
@@ -711,7 +745,9 @@ class Acl
      * @throws InvalidArgumentException
      * @return void
      */
-    public function createAssertion(AssertionInterface $assertion, string $type, mixed $role, mixed $resource = null, ?string $permission = null): void
+    public function createAssertion(
+        AssertionInterface $assertion, string $type, mixed $role, mixed $resource = null, ?string $permission = null
+    ): void
     {
         $key = $this->generateAssertionKey($role, $resource, $permission);
 
@@ -949,15 +985,15 @@ class Acl
     /**
      * Traverse child roles to add them to the ACL object
      *
-     * @param  array $roles
+     * @param  array $childRoles
      * @return void
      */
-    protected function traverseChildren(array $roles): void
+    protected function traverseChildren(array $childRoles): void
     {
-        foreach ($roles as $role) {
-            $this->addRole($role);
-            if ($role->hasChildren()) {
-                $this->traverseChildren($role->getChildren());
+        foreach ($childRoles as $childRole) {
+            $this->addRole($childRole);
+            if ($childRole->hasChildren()) {
+                $this->traverseChildren($childRole->getChildren());
             }
         }
     }

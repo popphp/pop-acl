@@ -42,6 +42,15 @@ class AclTest extends TestCase
         $this->assertFalse($acl->isMultiStrict());
     }
 
+    public function testSetParentStrict()
+    {
+        $acl = new Acl();
+        $acl->setParentStrict();
+        $this->assertTrue($acl->isParentStrict());
+        $acl->setParentStrict(false);
+        $this->assertFalse($acl->isParentStrict());
+    }
+
     public function testAddRole()
     {
         $editor = new AclRole('editor');
