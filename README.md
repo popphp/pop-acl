@@ -4,7 +4,6 @@ pop-acl
 [![Build Status](https://github.com/popphp/pop-acl/workflows/phpunit/badge.svg)](https://github.com/popphp/pop-acl/actions)
 [![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-acl)](http://cc.popphp.org/pop-acl/)
 
-[![Join the chat at https://popphp.slack.com](https://media.popphp.org/img/slack.svg)](https://popphp.slack.com)
 [![Join the chat at https://discord.gg/TZjgT74U7E](https://media.popphp.org/img/discord.svg)](https://discord.gg/TZjgT74U7E)
 
 * [Overview](#overview)
@@ -39,7 +38,7 @@ Install `pop-acl` using Composer.
 Or, require it in your composer.json file
 
     "require": {
-        "popphp/pop-acl" : "^4.0.0"
+        "popphp/pop-acl" : "^4.1.0"
     }
 
 [Top](#pop-acl)
