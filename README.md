@@ -38,7 +38,7 @@ Install `pop-acl` using Composer.
 Or, require it in your composer.json file
 
     "require": {
-        "popphp/pop-acl" : "^4.1.0"
+        "popphp/pop-acl" : "^4.1.1"
     }
 
 [Top](#pop-acl)
