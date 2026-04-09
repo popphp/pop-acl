@@ -134,6 +134,16 @@ class Acl
     }
 
     /**
+     * Has roles
+     *
+     * @return bool
+     */
+    public function hasRoles(): bool
+    {
+        return !empty($this->roles);
+    }
+
+    /**
      * See if a role has been added
      *
      * @param  string $role
@@ -226,6 +236,16 @@ class Acl
     public function getResources(): array
     {
         return $this->resources;
+    }
+
+    /**
+     * Has resources
+     *
+     * @return bool
+     */
+    public function hasResources(): bool
+    {
+        return !empty($this->resources);
     }
 
     /**
