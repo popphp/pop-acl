@@ -81,6 +81,34 @@ class AclTest extends TestCase
         $this->assertTrue($acl->hasResource('user'));
     }
 
+    public function testHasRoles()
+    {
+        $acl = new Acl();
+        $this->assertFalse($acl->hasRoles());
+        $acl->addRole(new AclRole('editor'));
+        $this->assertTrue($acl->hasRoles());
+    }
+
+    public function testHasResources()
+    {
+        $acl = new Acl();
+        $this->assertFalse($acl->hasResources());
+        $acl->addResource(new AclResource('page'));
+        $this->assertTrue($acl->hasResources());
+    }
+
+    public function testGetRoleReturnsNullWhenNotFound()
+    {
+        $acl = new Acl();
+        $this->assertNull($acl->getRole('ghost'));
+    }
+
+    public function testGetResourceReturnsNullWhenNotFound()
+    {
+        $acl = new Acl();
+        $this->assertNull($acl->getResource('ghost'));
+    }
+
     public function testAllowBadRoleType()
     {
         $this->expectException('InvalidArgumentException');
@@ -642,6 +670,21 @@ class AclTest extends TestCase
         $this->assertFalse($acl->evaluatePolicies());
     }
 
+    public function testEvaluatePolicyDirect()
+    {
+        $acl   = new Acl();
+        $admin = new TestAsset\User(1001, true);
+        $page  = new AclResource('page', ['id' => 2001, 'user_id' => 1001]);
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+
+        // No addPolicy() call needed -- evaluatePolicy() dispatches straight to
+        // the role's can() method, independent of the registered-policies list.
+        $this->assertTrue($acl->evaluatePolicy('create', $admin, $page));
+        $this->assertTrue($acl->evaluatePolicy('create', 'user', 'page'));
+    }
+
     public function testEvaluatePolicyIsAllowed()
     {
         $acl = new Acl();
@@ -662,4 +705,402 @@ class AclTest extends TestCase
         $this->assertTrue($acl->isDenied('user', 'page'));
     }
 
+    public function testIsAllowedFallsBackToRulesWhenPolicyExistsForOtherRole()
+    {
+        $acl    = new Acl();
+        $admin  = new AclRole('admin');
+        $editor = new TestAsset\User(1001, false);
+        $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1001]);
+
+        $acl->setStrict();
+        $acl->addRoles([$admin, $editor]);
+        $acl->addResource($page);
+        $acl->allow($admin, $page, 'update');
+
+        // Policy only registered for 'user', not 'admin'
+        $acl->addPolicy('create', $editor, $page);
+
+        $this->assertTrue($acl->isAllowed($admin, $page, 'update'));
+        $this->assertFalse($acl->isAllowed($admin, $page, 'delete'));
+    }
+
+    public function testIsDeniedFallsBackToRulesWhenPolicyExistsForOtherRole()
+    {
+        $acl    = new Acl();
+        $admin  = new AclRole('admin');
+        $editor = new TestAsset\User(1001, false);
+        $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1001]);
+
+        $acl->addRoles([$admin, $editor]);
+        $acl->addResource($page);
+        $acl->deny($admin, $page, 'update');
+
+        // Policy only registered for 'user', not 'admin'
+        $acl->addPolicy('create', $editor, $page);
+
+        $this->assertTrue($acl->isDenied($admin, $page, 'update'));
+        $this->assertFalse($acl->isDenied($admin, $page, 'delete'));
+    }
+
+    public function testRemoveRole()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin, $page, 'edit');
+
+        $acl->removeRole($admin);
+
+        $this->assertFalse($acl->hasRole('admin'));
+    }
+
+    public function testRemoveRoleThrowsForUnregisteredRole()
+    {
+        $this->expectException('Pop\Acl\Exception');
+
+        $acl = new Acl();
+        $acl->removeRole('ghost');
+    }
+
+    public function testRemoveRoleReparentsChildrenToGrandparent()
+    {
+        $acl     = new Acl();
+        $admin   = new AclRole('admin');
+        $editor  = new AclRole('editor');
+        $reader  = new AclRole('reader');
+
+        $admin->addChild($editor);
+        $editor->addChild($reader);
+
+        $acl->addRole($admin); // pulls in editor and reader via traverseChildren()
+
+        $acl->removeRole($editor);
+
+        $this->assertFalse($acl->hasRole('editor'));
+        $this->assertTrue($reader->hasParent());
+        $this->assertTrue(($reader->getParent() === $admin));
+        $this->assertTrue($admin->hasChildren());
+        $this->assertEquals(1, count($admin->getChildren()));
+    }
+
+    public function testRemoveRoleWithNoParentOrphansChildrenAsRoots()
+    {
+        $acl    = new Acl();
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+
+        $editor->addChild($reader);
+        $acl->addRole($editor);
+
+        $acl->removeRole($editor);
+
+        $this->assertFalse($reader->hasParent());
+        $this->assertNull($reader->getParent());
+    }
+
+    public function testRemoveRolePurgesRulesAssertionsAndPolicies()
+    {
+        $acl    = new Acl();
+        $editor = new TestAsset\User(1001, true);
+        $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1001]);
+
+        $acl->addRole($editor);
+        $acl->addResource($page);
+        $acl->allow($editor, $page, 'edit', new TestAsset\TestAllowedAssertion());
+        $acl->addPolicy('create', $editor, $page);
+
+        $acl->removeRole($editor);
+
+        // Re-add a fresh role with the same name and confirm it starts clean
+        $acl->addRole(new AclRole('user'));
+        $acl->addResource($page);
+        $acl->setStrict(); // so isAllowed() requires an explicit rule instead of its permissive default
+
+        $this->assertFalse($acl->hasAssertionKey('allowed', 'user', 'page', 'edit'));
+        $this->assertFalse($acl->isAllowed('user', 'page', 'create'));
+    }
+
+    public function testRemoveRolePurgesUnrestrictedResourceAssertion()
+    {
+        // allow($role, $resource) with no permission arg stores an empty permission
+        // list for that resource -- a different purge branch in removeRole() than
+        // the per-permission one exercised by testRemoveRolePurgesRulesAssertionsAndPolicies.
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin, $page, null, new TestAsset\TestAllowedAssertion());
+
+        $this->assertTrue($acl->hasAssertionKey('allowed', 'admin', 'page'));
+
+        $acl->removeRole($admin);
+
+        $this->assertFalse($acl->hasAssertionKey('allowed', 'admin', 'page'));
+    }
+
+    public function testRemoveResource()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin, $page, 'edit');
+
+        $acl->removeResource($page);
+
+        $this->assertFalse($acl->hasResource('page'));
+    }
+
+    public function testRemoveResourceThrowsForUnregisteredResource()
+    {
+        $this->expectException('Pop\Acl\Exception');
+
+        $acl = new Acl();
+        $acl->removeResource('ghost');
+    }
+
+    public function testRemoveResourcePurgesRulesAssertionsAndPolicies()
+    {
+        $acl    = new Acl();
+        $editor = new TestAsset\User(1001, true);
+        $page   = new AclResource('page', ['id' => 2001, 'user_id' => 1001]);
+
+        $acl->addRole($editor);
+        $acl->addResource($page);
+        $acl->allow($editor, $page, 'edit', new TestAsset\TestAllowedAssertion());
+        $acl->addPolicy('create', $editor, $page);
+
+        $acl->removeResource($page);
+
+        // Re-add a fresh resource with the same name and confirm it starts clean
+        $acl->addResource(new AclResource('page'));
+        $acl->setStrict(); // so isAllowed() requires an explicit rule instead of its permissive default
+
+        $this->assertFalse($acl->hasAssertionKey('allowed', 'user', 'page', 'edit'));
+        $this->assertFalse($acl->isAllowed('user', 'page', 'create'));
+    }
+
+    public function testRemoveResourcePurgesUnrestrictedResourceAssertion()
+    {
+        // Same "empty permission list" purge branch as
+        // testRemoveRolePurgesUnrestrictedResourceAssertion, but on the removeResource() side.
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin, $page, null, new TestAsset\TestAllowedAssertion());
+
+        $this->assertTrue($acl->hasAssertionKey('allowed', 'admin', 'page'));
+
+        $acl->removeResource($page);
+
+        $this->assertFalse($acl->hasAssertionKey('allowed', 'admin', 'page'));
+    }
+
+    public function testAllowWildcardGrantsAnyPermission()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->setStrict(); // force the explicit-rule-matching path; non-strict mode's permissive
+                            // default would make this pass even without wildcard support
+        $acl->allow($admin, $page, '*');
+
+        $this->assertTrue($acl->isAllowed($admin, $page, 'edit'));
+        $this->assertTrue($acl->isAllowed($admin, $page, 'delete'));
+        $this->assertTrue($acl->isAllowed($admin, $page, ['edit', 'delete']));
+    }
+
+    public function testAllowWildcardStillLosesToSpecificDeny()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->setStrict(); // see note in testAllowWildcardGrantsAnyPermission
+        $acl->allow($admin, $page, '*');
+        $acl->deny($admin, $page, 'delete');
+
+        $this->assertTrue($acl->isAllowed($admin, $page, 'edit'));
+        $this->assertFalse($acl->isAllowed($admin, $page, 'delete'));
+    }
+
+    public function testDenyWildcardDeniesAnyPermission()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->deny($admin, $page, '*');
+
+        $this->assertTrue($acl->isDenied($admin, $page, 'edit'));
+        $this->assertTrue($acl->isDenied($admin, $page, 'delete'));
+        $this->assertFalse($acl->isAllowed($admin, $page, 'edit'));
+    }
+
+    public function testGetAllowedPermissionsNoRule()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+
+        $this->assertEquals([], $acl->getAllowedPermissions($admin, $page));
+    }
+
+    public function testGetAllowedPermissionsDirect()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin, $page, ['edit', 'delete']);
+
+        $result = $acl->getAllowedPermissions($admin, $page);
+        sort($result);
+        $this->assertEquals(['delete', 'edit'], $result);
+    }
+
+    public function testGetAllowedPermissionsMergesWithInheritance()
+    {
+        $acl    = new Acl();
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+        $page   = new AclResource('page');
+
+        $editor->addChild($reader);
+        $acl->addRole($editor);
+        $acl->addResource($page);
+        $acl->allow($editor, $page, 'read');
+        $acl->allow($reader, $page, 'comment');
+
+        $result = $acl->getAllowedPermissions($reader, $page);
+        sort($result);
+        $this->assertEquals(['comment', 'read'], $result);
+    }
+
+    public function testGetAllowedPermissionsUnrestrictedReturnsWildcardSentinel()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin, $page);
+
+        $this->assertEquals(['*'], $acl->getAllowedPermissions($admin, $page));
+    }
+
+    public function testGetAllowedPermissionsExplicitWildcardReturnsWildcardSentinel()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin, $page, ['edit', '*']);
+
+        $this->assertEquals(['*'], $acl->getAllowedPermissions($admin, $page));
+    }
+
+    public function testGetAllowedPermissionsWildcardWhenRoleHasNoResourcesRegisteredAtAll()
+    {
+        $acl   = new Acl();
+        $admin = new AclRole('admin');
+        $page  = new AclResource('page');
+
+        $acl->addRole($admin);
+        $acl->addResource($page);
+        $acl->allow($admin); // no resource arg at all -- role has zero resources registered
+
+        $this->assertEquals(['*'], $acl->getAllowedPermissions($admin, $page));
+    }
+
+    public function testGetDeniedPermissionsDirect()
+    {
+        $acl    = new Acl();
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
+
+        $acl->addRole($editor);
+        $acl->addResource($page);
+        $acl->deny($editor, $page, 'delete');
+
+        $this->assertEquals(['delete'], $acl->getDeniedPermissions($editor, $page));
+    }
+
+    public function testGetDeniedPermissionsUnrestrictedReturnsWildcardSentinel()
+    {
+        // deny($role, $resource) with no permission arg must be the *first* call for that
+        // role/resource pair to produce the empty-list "unrestricted" state — deny() only
+        // initializes the permission list to [] the first time that resource key is set;
+        // calling it again afterward with no permission is a no-op on an existing list.
+        $acl    = new Acl();
+        $editor = new AclRole('editor');
+        $page   = new AclResource('page');
+
+        $acl->addRole($editor);
+        $acl->addResource($page);
+        $acl->deny($editor, $page);
+
+        $this->assertEquals(['*'], $acl->getDeniedPermissions($editor, $page));
+    }
+
+    public function testPolicyCanThrowsOnUnknownMethod()
+    {
+        $this->expectException('Pop\Acl\Policy\Exception');
+
+        $user = new TestAsset\User(1001, true);
+        $user->can('nonexistentMethod');
+    }
+
+    public function testPolicyCanThrowsOnUnknownMethodInCommaList()
+    {
+        $this->expectException('Pop\Acl\Policy\Exception');
+
+        $user = new TestAsset\User(1001, true);
+        $user->can('create,nonexistentMethod');
+    }
+
+    public function testPolicyCanEvaluatesMultipleValidMethodsInSequence()
+    {
+        $user = new TestAsset\User(1001, true); // admin AND owner (id matches page's user_id)
+        $page = new AclResource('page', ['user_id' => 1001]);
+
+        $this->assertTrue($user->can('create,update', $page));
+    }
+
+    public function testPolicyCanShortCircuitsOnFirstFalseMethod()
+    {
+        $user = new TestAsset\User(1001, false); // not admin, but is the owner
+        $page = new AclResource('page', ['user_id' => 1001]);
+
+        // update() alone would pass (ownership matches) -- proves it's never
+        // reached once create() (evaluated first) returns false.
+        $this->assertTrue($user->can('update', $page));
+        $this->assertFalse($user->can('create', $page));
+        $this->assertFalse($user->can('create,update', $page));
+    }
 }

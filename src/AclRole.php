@@ -4,7 +4,7 @@
  *
  * @link       https://github.com/popphp/popphp-framework
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
  */
 
@@ -19,9 +19,9 @@ namespace Pop\Acl;
  * @category   Pop
  * @package    Pop\Acl
  * @author     Nick Sagona, III <dev@noladev.com>
- * @copyright  Copyright (c) 2009-2026 NOLA Interactive, LLC.
+ * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
- * @version    4.1.3
+ * @version    5.0.0
  */
 class AclRole extends AbstractAcl
 {
@@ -53,6 +53,25 @@ class AclRole extends AbstractAcl
             if ($child->getParent() === null) {
                 $child->setParent($this);
             }
+        }
+        return $this;
+    }
+
+    /**
+     * Remove a child role
+     *
+     * @param  AclRole $child
+     * @return AclRole
+     */
+    public function removeChild(AclRole $child): AclRole
+    {
+        $key = array_search($child, $this->children, true);
+        if ($key !== false) {
+            unset($this->children[$key]);
+            $this->children = array_values($this->children);
+        }
+        if ($child->getParent() === $this) {
+            $child->clearParent();
         }
         return $this;
     }
@@ -100,6 +119,17 @@ class AclRole extends AbstractAcl
     public function getParent(): AclRole|null
     {
         return $this->parent;
+    }
+
+    /**
+     * Clear the parent role
+     *
+     * @return AclRole
+     */
+    public function clearParent(): AclRole
+    {
+        $this->parent = null;
+        return $this;
     }
 
     /**

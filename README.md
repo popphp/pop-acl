@@ -15,6 +15,11 @@ pop-acl
 * [Multiple Roles](#multiple-roles)
   - [Multi-Strict](#multi-strict)
 * [Inheritance](#inheritance)
+  - [Parent-Strict](#parent-strict)
+* [Removing Allow/Deny Rules](#removing-allowdeny-rules)
+* [Removing Roles and Resources](#removing-roles-and-resources)
+* [Wildcard Permissions](#wildcard-permissions)
+* [Inspecting Effective Permissions](#inspecting-effective-permissions)
 * [Assertions](#assertions)
 * [Policies](#policies)
 
@@ -38,7 +43,7 @@ Install `pop-acl` using Composer.
 Or, require it in your composer.json file
 
     "require": {
-        "popphp/pop-acl" : "^4.1.3"
+        "popphp/pop-acl" : "^5.0.0"
     }
 
 [Top](#pop-acl)
@@ -85,6 +90,15 @@ var_dump($acl->isAllowed('editor', 'page', 'edit')); // true
 var_dump($acl->isAllowed('editor', 'page', 'add'));  // false
 var_dump($acl->isAllowed('reader', 'page', 'edit')); // false
 var_dump($acl->isAllowed('reader', 'page', 'read')); // true
+```
+
+Roles and resources can also be passed directly into the `Acl` constructor instead of (or alongside)
+`addRoles()`/`addResource()` — individually, as arrays, or a mix of both, in any order:
+
+```php
+$acl = new Acl($admin, $editor, $reader, $page);
+// or
+$acl = new Acl([$admin, $editor, $reader], $page);
 ```
 
 [Top](#pop-acl)
@@ -255,6 +269,42 @@ var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'add'));  // false
 var_dump($acl->isAllowedMulti([$admin, $editor], $page, 'edit')); // true
 ```
 
+`isAllowedMultiStrict()` is a shorthand for the same thing — it sets the `multi-strict` flag on the `Acl`
+object and then calls `isAllowedMulti()`:
+
+```php
+var_dump($acl->isAllowedMultiStrict([$admin, $editor], $page, 'add'));  // false
+var_dump($acl->isAllowedMultiStrict([$admin, $editor], $page, 'edit')); // true
+```
+
+There are equivalent `isDeniedMulti()` and `isDeniedMultiStrict()` methods for checking denial across
+multiple roles at once. By default (loose), it passes as `true` if *any* of the roles is denied; with
+`multi-strict` (either via `setMultiStrict(true)` or the `isDeniedMultiStrict()` shorthand), *all* of the
+roles must be denied:
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl = new Acl();
+
+$admin  = new Role('admin');
+$editor = new Role('editor');
+$page   = new Resource('page');
+
+$acl->addRoles([$admin, $editor])
+    ->addResource($page);
+
+$acl->deny('admin', 'page', 'add')
+    ->deny('editor', 'page', 'edit');
+
+var_dump($acl->isDeniedMulti([$admin, $editor], $page, 'add'));  // true, admin is denied
+var_dump($acl->isDeniedMulti([$admin, $editor], $page, 'read')); // false, neither is denied
+
+var_dump($acl->isDeniedMultiStrict([$admin, $editor], $page, 'add')); // false, editor isn't denied 'add'
+```
+
 [Top](#pop-acl)
 
 Inheritance
@@ -276,6 +326,9 @@ $reader = new Role('reader');
 // The role $reader will now inherit the access rules
 // of the role $editor, unless explicitly overridden.
 $editor->addChild($reader);
+
+// Equivalent to the above, from the other direction:
+// $reader->setParent($editor);
 
 $page = new Resource('page');
 
@@ -302,6 +355,199 @@ var_dump($acl->isAllowed('editor', 'page', 'read')); // true
 var_dump($acl->isAllowed('reader', 'page', 'read')); // true
 ```
 
+### Parent-Strict
+
+In [strict](#strict) mode, an *inherited* rule (one defined on a parent role, not the role being checked
+directly) is treated more loosely by default: any explicit resource/permission entry on a parent is enough
+to pass the check, regardless of which specific permission was requested. Setting `parent-strict` requires
+an inherited rule to match the exact permission requested, just like a rule defined directly on the role:
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl = new Acl();
+$acl->setStrict();
+
+$editor = new Role('editor');
+$reader = new Role('reader');
+$editor->addChild($reader);
+$page = new Resource('page');
+
+$acl->addRoles([$editor, $reader]);
+$acl->addResource($page);
+
+$acl->allow($editor, $page, 'edit'); // editor (the parent) can edit
+
+// Default parent-strict is false: reader inherits *any* explicit rule from
+// editor, regardless of which specific permission was requested
+var_dump($acl->isAllowed($reader, $page, 'delete')); // bool(true)
+
+$acl->setParentStrict();
+
+// With parent-strict enabled, an inherited rule must match the exact
+// permission requested
+var_dump($acl->isAllowed($reader, $page, 'delete')); // bool(false)
+var_dump($acl->isAllowed($reader, $page, 'edit'));   // bool(true)
+```
+
+[Top](#pop-acl)
+
+Removing Allow/Deny Rules
+-------------------------
+
+`removeAllowRule()` and `removeDenyRule()` revoke a previously-set rule without removing the role or
+resource itself. Each accepts increasingly broad arguments: a specific permission, an entire resource
+(every permission on it), or just a role (every rule for that role, on any resource):
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl    = new Acl();
+$editor = new Role('editor');
+$page   = new Resource('page');
+$post   = new Resource('post');
+
+$acl->addRole($editor);
+$acl->addResources([$page, $post]);
+$acl->setStrict();
+
+$acl->allow($editor, $page, ['edit', 'delete']);
+$acl->allow($editor, $post, 'edit');
+
+// Revoke just one permission on one resource
+$acl->removeAllowRule($editor, $page, 'delete');
+var_dump($acl->isAllowed($editor, $page, 'edit'));   // bool(true)
+var_dump($acl->isAllowed($editor, $page, 'delete')); // bool(false)
+
+// Revoke every permission on one resource
+$acl->removeAllowRule($editor, $page);
+var_dump($acl->isAllowed($editor, $page, 'edit')); // bool(false)
+var_dump($acl->isAllowed($editor, $post, 'edit')); // bool(true), unaffected
+
+// Revoke every rule for the role entirely
+$acl->removeAllowRule($editor);
+var_dump($acl->isAllowed($editor, $post, 'edit')); // bool(false)
+```
+
+`removeDenyRule()` works identically for `deny()` rules.
+
+> **Note:** because an empty permission list means "unrestricted" (see [Wildcard Permissions](#wildcard-permissions)),
+> removing the *last* remaining rule for a role/resource pair with `removeAllowRule()`/`removeDenyRule()`
+> can leave that resource (or role) registered but with no explicit rules left — which, in strict mode, is
+> indistinguishable from an intentional blanket `allow($role, $resource)`/`deny($role, $resource)`. If your
+> intent is "this role should end up with zero access," prefer [`removeRole()`](#removing-roles-and-resources)
+> or [`removeResource()`](#removing-roles-and-resources), which clean up that empty state as part of the removal.
+
+[Top](#pop-acl)
+
+Removing Roles and Resources
+----------------------------
+
+Roles and resources can be removed from the ACL object. Removing a role reparents any of its child
+roles onto its own parent (or makes them root roles if it had none), and removing either a role or a
+resource also purges any allow/deny rules, assertions and policies that referenced it — so a new
+role or resource added later with the same name starts with a clean slate.
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl = new Acl();
+
+$admin = new Role('admin');
+$page  = new Resource('page');
+
+$acl->addRole($admin);
+$acl->addResource($page);
+$acl->allow($admin, $page, 'edit');
+
+$acl->removeRole($admin);
+$acl->removeResource($page);
+
+var_dump($acl->hasRole('admin'));     // bool(false)
+var_dump($acl->hasResource('page'));  // bool(false)
+
+var_dump($acl->hasRoles());     // bool(false), no roles registered at all
+var_dump($acl->hasResources()); // bool(false), no resources registered at all
+```
+
+`hasRoles()`/`hasResources()` answer "are there any roles/resources registered at all," as distinct from
+`hasRole($name)`/`hasResource($name)`, which check for one specific one.
+
+[Top](#pop-acl)
+
+Wildcard Permissions
+--------------------
+
+The permission `'*'` is reserved and means "any permission." It can be used with `allow()` or `deny()`
+to grant or block everything on a resource, and is combinable with a more specific rule — deny always
+takes precedence over allow, so a wildcard allow can still be narrowed by a specific deny:
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl   = new Acl();
+$admin = new Role('admin');
+$page  = new Resource('page');
+
+$acl->addRole($admin);
+$acl->addResource($page);
+
+$acl->allow($admin, $page, '*')       // Admin can do anything to a page...
+    ->deny($admin, $page, 'delete');  // ...except delete it
+
+var_dump($acl->isAllowed($admin, $page, 'edit'));   // bool(true)
+var_dump($acl->isAllowed($admin, $page, 'delete')); // bool(false)
+```
+
+Checking if the `'*'` permission is allowed (rather than a specific permission) still checks only whether
+that permission is allowed or denied, not whether all permissions are allowed:
+
+```php
+var_dump($acl->isAllowed($admin, $page, '*')); // bool(true), because '*' itself is not denied (only 'delete' is)
+```
+
+[Top](#pop-acl)
+
+Inspecting Effective Permissions
+--------------------------------
+
+`getAllowedPermissions()` and `getDeniedPermissions()` report the explicit, effective permission set
+for a role on a resource, merged with any inherited roles. They return `['*']` if access is
+unrestricted at any level (an empty permission list or an explicit `'*'`), or `[]` if no rule exists
+at all. These report the explicit rule set only — they do not apply the `strict`/`multiStrict`/`parentStrict`
+fallback behavior, so the result can differ from what `isAllowed()`/`isDenied()` actually return for the
+same role and resource. For example, on a default (non-strict) `Acl`, a role with no rules at all will
+have `getAllowedPermissions()` return `[]` while `isAllowed()` returns `true` for any permission, because
+of the permissive default:
+
+```php
+use Pop\Acl\Acl;
+use Pop\Acl\AclRole as Role;
+use Pop\Acl\AclResource as Resource;
+
+$acl    = new Acl();
+$editor = new Role('editor');
+$reader = new Role('reader');
+$page   = new Resource('page');
+
+$editor->addChild($reader);
+$acl->addRole($editor);
+$acl->addResource($page);
+
+$acl->allow($editor, $page, 'read');
+$acl->allow($reader, $page, 'comment');
+
+print_r($acl->getAllowedPermissions($reader, $page)); // ['read', 'comment'] (order not guaranteed)
+```
+
 [Top](#pop-acl)
 
 Assertions
@@ -322,9 +568,9 @@ class UserCanEditPage implements AssertionInterface
 
     public function assert(
         Acl $acl, AclRole $role,
-        AclResource $resource = null,
-        $permission = null
-    )
+        ?AclResource $resource = null,
+        mixed $permission = null
+    ): bool
     {
         // Check that the resource owner (user_id) is the same as the current role user (user_id)
         return ((null !== $resource) && ($resource->user_id == $role->user_id));
@@ -368,6 +614,12 @@ if ($acl->isAllowed('admin', 'page', 'edit')) { }
 // does not match the page's user ID
 if ($acl->isAllowed('editor', 'page', 'edit')) { }
 ```
+
+Under the hood, an assertion passed to the 4th argument of `allow()`/`deny()` is stored via `createAssertion()`
+and keyed off the role/resource/permission it was registered against. `hasAssertionKey()` and `getAssertionKey()`
+let you check whether an assertion is registered for a given combination, and `deleteAssertion()` removes one
+directly — most applications won't need these directly, since `removeAllowRule()`/`removeDenyRule()`/`removeRole()`/
+`removeResource()` already call `deleteAssertion()` for you as part of removing the rule it was attached to.
 
 [Top](#pop-acl)
 
@@ -434,7 +686,9 @@ $acl->addPolicy('update', $editor, $page);
 ```
 
 Once the polices are added to the ACL object, they will be automatically evaluated on the
-`isAllowed()` or `isDenied()` method calls:
+`isAllowed()` or `isDenied()` method calls. Note that `can()` throws `Pop\Acl\Policy\Exception` if the
+requested policy method doesn't exist or isn't callable on the role, so `isAllowed()`, `isDenied()`,
+`evaluatePolicy()` and `evaluatePolicies()` can throw that exception too whenever policies are in use:
 
 ```php
 // Returns true, because the user is an admin
@@ -465,7 +719,7 @@ var_dump($acl->evaluatePolicy('update', 'admin', 'page'));
 
 // Returns true, because the editor does "own" the page
 var_dump($acl->evaluatePolicy('update', 'editor', 'page')); 
-``````
+```
 
 Which, in turn, the `evaluatePolicy()` method calls are calling the `can()` method on the
 actual policy objects themselves:
@@ -475,6 +729,17 @@ var_dump($admin->can('create', $page));  // true, because the user is an admin
 var_dump($editor->can('create', $page)); // false, because the user is an editor (not an admin)
 var_dump($admin->can('update', $page));  // false, because the admin doesn't "own" the page
 var_dump($editor->can('update', $page)); // true, because the editor does "own" the page
+```
+
+`can()` also accepts a comma-separated list of methods, evaluated in order and short-circuiting on the
+first one that returns `false`:
+
+```php
+// false: create() passes (admin), but update() fails (admin doesn't "own" the page)
+var_dump($admin->can('create,update', $page));
+
+// false: create() fails immediately (not an admin) -- update() is never even evaluated
+var_dump($editor->can('create,update', $page));
 ```
 
 [Top](#pop-acl)

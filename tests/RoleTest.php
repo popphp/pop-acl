@@ -61,4 +61,42 @@ class RoleTest extends TestCase
         $this->assertTrue(($reader->getParent() === $editor));
     }
 
+    public function testRemoveChild()
+    {
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+        $editor->addChild($reader);
+
+        $editor->removeChild($reader);
+
+        $this->assertFalse($editor->hasChildren());
+        $this->assertEquals(0, count($editor->getChildren()));
+        $this->assertFalse($reader->hasParent());
+        $this->assertNull($reader->getParent());
+    }
+
+    public function testRemoveChildNotPresentIsNoOp()
+    {
+        $editor  = new AclRole('editor');
+        $unknown = new AclRole('unknown');
+
+        $editor->removeChild($unknown);
+
+        $this->assertFalse($editor->hasChildren());
+    }
+
+    public function testClearParent()
+    {
+        $editor = new AclRole('editor');
+        $reader = new AclRole('reader');
+        $editor->addChild($reader);
+
+        $reader->clearParent();
+
+        $this->assertFalse($reader->hasParent());
+        $this->assertNull($reader->getParent());
+        // clearParent() only affects the child's own pointer, not the parent's list
+        $this->assertTrue($editor->hasChildren());
+    }
+
 }
