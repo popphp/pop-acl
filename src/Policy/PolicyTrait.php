@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Pop PHP Framework (http://www.popphp.org/)
  *
@@ -24,6 +25,7 @@ use Pop\Acl\AclResource;
  * @copyright  Copyright (c) 2009-2027 NOLA Interactive, LLC.
  * @license    https://www.popphp.org/license     New BSD License
  * @version    5.0.0
+ * @phpstan-require-implements PolicyInterface
  */
 trait PolicyTrait
 {

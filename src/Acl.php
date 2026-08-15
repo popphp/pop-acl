@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Pop PHP Framework (http://www.popphp.org/)
  *
@@ -1060,7 +1061,7 @@ class Acl
      * @param  mixed $resource
      * @param  mixed $permission
      * @throws Exception
-     * @throws Pop\Acl\Policy\Exception if a policy method isn't callable on the role
+     * @throws \Pop\Acl\Policy\Exception if a policy method isn't callable on the role
      * @return bool|null
      */
     public function evaluatePolicies(mixed $role = null, mixed $resource = null, mixed $permission = null): bool|null
@@ -1110,7 +1111,7 @@ class Acl
      * @param  mixed  $role
      * @param  mixed  $resource
      * @throws Exception
-     * @throws Pop\Acl\Policy\Exception if a policy method isn't callable on the role
+     * @throws \Pop\Acl\Policy\Exception if a policy method isn't callable on the role
      * @return bool|null
      */
     public function evaluatePolicy(string $method, mixed $role, mixed $resource = null): bool|null
