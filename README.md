@@ -2,7 +2,7 @@ pop-acl
 =======
 
 [![Build Status](https://github.com/popphp/pop-acl/workflows/phpunit/badge.svg)](https://github.com/popphp/pop-acl/actions)
-[![Coverage Status](http://cc.popphp.org/coverage.php?comp=pop-acl)](http://cc.popphp.org/pop-acl/)
+[![Coverage Status](https://cc.popphp.org/coverage.php?comp=pop-acl)](https://cc.popphp.org/pop-acl/)
 
 [![Join the chat at https://discord.gg/TZjgT74U7E](https://media.popphp.org/img/discord.svg)](https://discord.gg/TZjgT74U7E)
 
@@ -29,7 +29,7 @@ Overview
 Beyond allowing or denying basic user access, it provides support for roles, resources,
 permissions as well as assertions and policies for fine-grain access-control.
 
-`pop-acl` is a component of the [Pop PHP Framework](http://www.popphp.org/).
+`pop-acl` is a component of the [Pop PHP Framework](https://www.popphp.org/).
 
 [Top](#pop-acl)
 
