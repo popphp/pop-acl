@@ -75,12 +75,18 @@ $acl->allow('admin', 'page')           // Admin can do anything to a page
     ->allow('editor', 'page', 'edit')  // Editor can only edit a page
     ->allow('reader', 'page', 'read'); // Reader can only read a page
 
+$acl->setStrict(); // Deny anything without an explicit allow rule. See [Strict](#strict).
+
 var_dump($acl->isAllowed($admin, $page, 'add'));   // true
 var_dump($acl->isAllowed($editor, $page, 'edit')); // true
 var_dump($acl->isAllowed($editor, $page, 'add'));  // false
 var_dump($acl->isAllowed($reader, $page, 'edit')); // false
 var_dump($acl->isAllowed($reader, $page, 'read')); // true
 ```
+
+Without that `setStrict()` call, an `Acl` is **permissive**: a check for which no rule
+exists returns `true`, so `isAllowed($editor, $page, 'add')` would be `true` rather than
+`false`. See [Strict](#strict) for the full explanation.
 
 The above also works with the string value names of the roles and resources:
 
